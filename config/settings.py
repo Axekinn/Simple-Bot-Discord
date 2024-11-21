@@ -1,4 +1,4 @@
-COMMANDE_PREFIX = '^'
+COMMAND_PREFIX = '^'
 
 APPLICATION_ID = '1240307312216899696' #L'id de votre application discord (clique droit puis copier l'identifiant)
 

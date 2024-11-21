@@ -35,9 +35,9 @@ intents.voice_states = True
 class DiscordBot(commands.Bot):
     def __init__(self):
         super().__init__(
-            command_prefix = config.settings.COMMANDE_PREFIX,  # Use the correct attribute name
+            command_prefix = config.settings.COMMAND_PREFIX,
             intents = intents,
-            log_handler = logger,
+            log_hander = logger,
             application_id = config.settings.APPLICATION_ID,
         )
         self.logger = logger
