@@ -139,3 +139,23 @@ def pagination(view, button):
             item.disabled = True
         else:
             item.disabled = False
+
+async def log_event(channel, content, embed_data):
+    print(f"log_event: Sending message to channel {channel} with content: {content}")
+    embed = discord.Embed(description=content, color=discord.Color.blue())
+    
+    author = embed_data.get('author', {})
+    icon_url = author.get('icon_url')
+    
+    # Validate the icon_url
+    if icon_url and isinstance(icon_url, str) and icon_url.startswith(('http://', 'https://')):
+        embed.set_author(name=author.get('name', 'Bot'), icon_url=icon_url)
+    else:
+        # Set a default icon URL
+        embed.set_author(name=author.get('name', 'Bot'), icon_url='https://example.com/default-icon.png')
+    
+    # Add other embed fields as needed
+    # ...
+    
+    await channel.send(content=content, embed=embed)
+    print(f"log_event: Message sent successfully")

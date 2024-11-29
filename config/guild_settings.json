@@ -242,7 +242,7 @@
             "disabled": false,
             "icon_url": null,
             "label": "join",
-            "message_format": "simple",
+            "message_format": "extended",
             "ignore_channels": []
         },
         "moderator_ban": {
@@ -368,7 +368,7 @@
             "disabled": false,
             "icon_url": null,
             "label": "part",
-            "message_format": "simple",
+            "message_format": "extended",
             "ignore_channels": []
         },
         "pending": {
@@ -386,7 +386,7 @@
             "disabled": false,
             "icon_url": null,
             "label": "rejoin",
-            "message_format": "simple",
+            "message_format": "extended",
             "ignore_channels": []
         },
         "role": {

@@ -12,6 +12,59 @@ logger = logging.getLogger(name='WGEDLA')
 discord_logger = logging.getLogger('discord')
 discord_logger.setLevel(logging.WARNING)
 
+class LogMessages:
+    async def send_log(self, guild_id: int, log_type: str, embed):
+        try:
+            channel_id = int(self.bot.guild_settings[guild_id][log_type]['channel_id'])
+            channel = self.bot.get_channel(channel_id)
+            if channel is None:
+                self.bot.logger.error(f'{self.bot.guild_settings[guild_id][log_type]} Log channel with ID {channel_id} not found')
+                return
+            if isinstance(embed, tuple):
+                if embed[1] is not False:
+                    await channel.send(embed=embed[0], file=embed[1])
+                else:
+                    await channel.send(embed=embed[0])
+            else:
+                await channel.send(embed=embed)
+        except Exception as e:
+            self.bot.logger.error(f'Failed to send log: {e}')
+
+    async def get_moderator(self, message: discord.Message):
+        """
+        Retrieves the moderator who deleted a message.
+        """
+        moderator = None
+        after = datetime.now(timezone.utc) - timedelta(seconds=5)
+        if message.author is not None:
+            try:
+                async for entry in message.guild.audit_logs(after=after, action=discord.AuditLogAction.message_delete):
+                    if entry.target.id == message.author.id and entry.extra.channel.id == message.channel.id:
+                        moderator = entry.user
+                        break
+            except Exception as e:
+                self.bot.logger.error(f'Failed to get moderator: {e}')
+        return moderator
+
+    def pre_checks(self, message: discord.Message):
+        """
+        Performs preliminary checks on the message.
+        """
+        if message.author.id in config.settings.USER_WHITELIST_IDS and not config.settings.NSA_MODE:
+            return
+        if message.author.bot:
+            return
+
+    async def process_message(self, guild_id: int, log_type: str, embed, message: discord.Message):
+        """
+        Processes the message by sending a log and inserting it into the database.
+        """
+        try:
+            await self.send_log(guild_id=guild_id, log_type=log_type, embed=embed)
+            await database.database_insert_message(message)
+        except Exception as e:
+            self.bot.logger.error(f'Failed to process message: {e}')
+
 class MessageLog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
