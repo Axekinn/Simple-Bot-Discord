@@ -224,7 +224,7 @@
             "disabled": false,
             "icon_url": null,
             "label": "delete",
-            "message_format": "simple",
+            "message_format": "extended",
             "ignore_channels": []
         },
         "edit": {
@@ -233,7 +233,7 @@
             "disabled": false,
             "icon_url": null,
             "label": "edit",
-            "message_format": "simple",
+            "message_format": "extended",
             "ignore_channels": []
         },
         "join": {
