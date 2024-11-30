@@ -1,5 +1,0 @@
-__pycache__/
-*.pyc
-.pylintrc
-.vscode/
-AttachmentCache/*
