@@ -106,85 +106,31 @@ class General(commands.Cog, name="general"):
             )
         await context.send(embed=embed)
 
-    @commands.hybrid_group(name="infos", description="Donne quelques infos sur le serveur et le bot")
-    async def infos(self, context: Context):
-        if context.invoked_subcommand is None:
-            await context.send("Veuillez spécifier une sous-commande : `bot` ou `server`.")
-
-    @infos.command(name="bot", description="Infos du bot")
-    async def infos_bot(self, context: Context):
+    @commands.hybrid_command(
+        name="botinfo",
+        description="Get some useful (or not) information about the bot.",
+    )
+    async def botinfo(self, context: Context) -> None:
         """
-        Affiche des informations sur le bot.
-        """
-        python_version = platform.python_version()
-        discord_version = discord.__version__
+        Get some useful (or not) information about the bot.
 
+        :param context: The hybrid command context.
+        """
         embed = discord.Embed(
-            description="Fork by [Axekin](https://github.com/Axekinn), original post by Krypton",
+            description="Used [Krypton's](https://krypton.ninja) template",
             color=0xBEBEFE,
         )
-        embed.set_author(name="Informations du Bot")
-        embed.add_field(name="Owner", value="_axekin", inline=True)
-        embed.add_field(name="Version Python", value=python_version, inline=True)
+        embed.set_author(name="Bot Information")
+        embed.add_field(name="Owner:", value="Krypton#7331", inline=True)
+        embed.add_field(
+            name="Python Version:", value=f"{platform.python_version()}", inline=True
+        )
         embed.add_field(
             name="Prefix:",
-            value=f"/ (Slash Commands) ou `{self.bot.config['prefix']}` pour les commandes normales",
+            value=f"/ (Slash Commands) or {self.bot.config['prefix']} for normal commands",
             inline=False,
         )
-        embed.add_field(name="Version du Bot", value="1.0.0", inline=True)  # Remplacez par votre version réelle
-        embed.add_field(name="Version de discord.py", value=discord_version, inline=True)
-        embed.set_footer(text=f"Demandé par {context.author}", icon_url=context.author.display_avatar.url)
-        
-        await context.send(embed=embed)
-
-    @infos.command(name="server", description="Infos du serveur")
-    async def infos_server(self, context: Context):
-        """
-        Affiche des informations sur le serveur.
-        """
-        guild = context.guild
-        roles = [role.name for role in guild.roles]
-        num_roles = len(roles)
-        if num_roles > 50:
-            roles = roles[:50]
-            roles.append(f">>>> Affichage [50/{num_roles}] Rôles")
-        roles_formatted = ", ".join(roles)
-
-        premium_tier = {
-            0: 'Aucun Boost',
-            1: 'Niveau 1',
-            2: 'Niveau 2',
-            3: 'Niveau 3',
-        }
-
-        mfa_level = {0: 'Désactivé', 1: 'Activé'}
-
-        verification_level = {
-            0: 'Non spécifié',
-            1: 'Faible : email vérifié requis',
-            2: 'Moyen : sur Discord depuis 5 minutes',
-            3: 'Élevé : sur le serveur depuis 10 minutes',
-            4: 'Très élevé : numéro de téléphone vérifié',
-        }
-
-        embed = discord.Embed(
-            title="**Informations du Serveur**",
-            description=f"{guild.name} (ID : {guild.id})",
-            color=0xBEBEFE
-        )
-        if guild.icon is not None:
-            embed.set_thumbnail(url=guild.icon.url)
-        embed.add_field(name="Date de Création", value=guild.created_at.strftime("%d/%m/%Y %H:%M:%S"), inline=True)
-        embed.add_field(name="Âge du Serveur", value=f"{discord.utils.format_dt(guild.created_at, style='R')}", inline=True)
-        embed.add_field(name="Rôle le Plus Élevé", value=guild.roles[-1].mention if guild.roles else "Aucun rôle", inline=True)
-        embed.add_field(name="Nombre de Membres", value=f"{guild.member_count}/{guild.max_members}", inline=True)  # Correction ici
-        embed.add_field(name="Nombre d'Émojis", value=f"{len(guild.emojis)}", inline=True)
-        embed.add_field(name="Nombre de Salons", value=f"{len(guild.text_channels) + len(guild.voice_channels)}", inline=True)
-        embed.add_field(name="Niveau de Vérification", value=verification_level.get(guild.verification_level, "Inconnu"), inline=True)
-        embed.add_field(name="Authentification 2-Factor (A2F)", value=mfa_level.get(guild.mfa_level, "Inconnu"), inline=True)
-        embed.add_field(name="Niveau Boost Nitro", value=premium_tier.get(guild.premium_tier, "Inconnu"), inline=True)
-        embed.add_field(name="Rôles", value=roles_formatted, inline=False)
-
+        embed.set_footer(text=f"Requested by {context.author}")
         await context.send(embed=embed)
 
     @commands.hybrid_command(
@@ -266,7 +212,7 @@ class General(commands.Cog, name="general"):
         :param context: The hybrid command context.
         """
         embed = discord.Embed(
-            description=f"Join the support server for the bot by clicking [here](https://discord.com/invite/emulationfr).",
+            description=f"Join the support server for the bot by clicking [here](https://discord.gg/mTBrXyWxAF).",
             color=0xD75BF4,
         )
         try:

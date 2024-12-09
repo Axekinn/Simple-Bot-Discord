@@ -12,51 +12,45 @@ from discord.ext import commands
 from discord.ext.commands import Context
 
 
-class Owner(commands.Cog, name="Owner"):
+class Owner(commands.Cog, name="owner"):
     def __init__(self, bot) -> None:
         self.bot = bot
 
-    @commands.hybrid_command(
+    @commands.command(
         name="sync",
-        description="Synchronise les commandes slash.",
+        description="Synchonizes the slash commands.",
     )
-    @app_commands.describe(scope="Le scope de la synchronisation. Peut être `global` ou `guild`")
+    @app_commands.describe(scope="The scope of the sync. Can be `global` or `guild`")
     @commands.is_owner()
     async def sync(self, context: Context, scope: str) -> None:
         """
-        Synchronise les commandes slash.
+        Synchonizes the slash commands.
 
-        :param context: Le contexte de la commande.
-        :param scope: Le scope de la synchronisation. Peut être `global` ou `guild`.
+        :param context: The command context.
+        :param scope: The scope of the sync. Can be `global` or `guild`.
         """
 
-        if scope.lower() == "global":
+        if scope == "global":
             await context.bot.tree.sync()
             embed = discord.Embed(
-                description="Les commandes slash ont été synchronisées globalement.",
+                description="Slash commands have been globally synchronized.",
                 color=0xBEBEFE,
             )
             await context.send(embed=embed)
             return
-        elif scope.lower() == "guild":
-            if context.guild is None:
-                await context.send("Cette commande doit être utilisée dans un serveur.", delete_after=5)
-                return
+        elif scope == "guild":
             context.bot.tree.copy_global_to(guild=context.guild)
             await context.bot.tree.sync(guild=context.guild)
             embed = discord.Embed(
-                description="Les commandes slash ont été synchronisées dans ce serveur.",
+                description="Slash commands have been synchronized in this guild.",
                 color=0xBEBEFE,
             )
             await context.send(embed=embed)
             return
-        else:
-            embed = discord.Embed(
-                description="Le scope spécifié est invalide. Utilisez `global` ou `guild`.",
-                color=0xFF0000,
-            )
-            await context.send(embed=embed, delete_after=5)
-            return
+        embed = discord.Embed(
+            description="The scope must be `global` or `guild`.", color=0xE02B2B
+        )
+        await context.send(embed=embed)
 
     @commands.command(
         name="unsync",
@@ -207,30 +201,20 @@ class Owner(commands.Cog, name="Owner"):
 
     @commands.hybrid_command(
         name="embed",
-        description="Le bot dira tout ce que vous voulez, mais dans des embeds.",
+        description="The bot will say anything you want, but within embeds.",
     )
-    @app_commands.describe(message="Le message que le bot doit répéter dans un embed")
+    @app_commands.describe(message="The message that should be repeated by the bot")
     @commands.is_owner()
     async def embed(self, context: Context, *, message: str) -> None:
         """
-        Le bot dira tout ce que vous voulez, mais en utilisant des embeds.
+        The bot will say anything you want, but using embeds.
 
-        :param context: Le contexte de la commande hybride.
-        :param message: Le message que le bot doit répéter.
+        :param context: The hybrid command context.
+        :param message: The message that should be repeated by the bot.
         """
         embed = discord.Embed(description=message, color=0xBEBEFE)
         await context.send(embed=embed)
 
-        # Supprimer le message utilisateur uniquement si la commande est préfixée
-        if context.message:
-            try:
-                await context.message.delete()
-            except discord.Forbidden:
-                # Le bot n'a pas la permission de supprimer des messages
-                await context.send("Je n'ai pas la permission de supprimer les messages.", delete_after=5)
-            except discord.HTTPException as e:
-                # Une erreur s'est produite lors de la suppression
-                await context.send(f"Une erreur est survenue lors de la suppression du message : {e}", delete_after=5)
 
 async def setup(bot) -> None:
     await bot.add_cog(Owner(bot))

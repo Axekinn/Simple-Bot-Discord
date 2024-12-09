@@ -59,11 +59,9 @@ intents.members = True
 intents.message_content = True
 intents.presences = True
 """
-
 intents = discord.Intents.default()
-intents.members = True  # Enable the members intent
-intents.message_content = True  # Enable message content intent if needed
-bot = commands.Bot(command_prefix='!', intents=intents)
+intents.message_content = True  # Enable message content intent
+intents.members = True  # Activez les intents nécessaires
 
 """
 Uncomment this if you want to use prefix (normal) commands.
@@ -101,7 +99,7 @@ class LoggingFormatter(logging.Formatter):
         format = "(black){asctime}(reset) (levelcolor){levelname:<8}(reset) (green){name}(reset) {message}"
         format = format.replace("(black)", self.black + self.bold)
         format = format.replace("(reset)", self.reset)
-        format.replace("(levelcolor)", log_color)
+        format = format.replace("(levelcolor)", log_color)
         format = format.replace("(green)", self.green + self.bold)
         formatter = logging.Formatter(format, "%Y-%m-%d %H:%M:%S", style="{")
         return formatter.format(record)
@@ -289,39 +287,36 @@ class DiscordBot(commands.Bot):
         else:
             raise error
 
-    async def notify_level_up(self, user_id):
-        user_id = int(user_id)
-        print(f"notify_level_up called with user_id: {user_id}")
-
-        user = self.bot.get_user(user_id)
-        print(f"get_user returned: {user}")
-
-        if user is None:
-            try:
-                user = await self.bot.fetch_user(user_id)
-                print(f"fetch_user returned: {user}")
-            except discord.NotFound:
-                print(f"User with ID {user_id} not found.")
-                return
-            except discord.HTTPException as e:
-                print(f"HTTPException while fetching user with ID {user_id}: {e}")
-                return
-
-        if user is None:
-            print(f"User with ID {user_id} is still None after fetching.")
-            return
-
-        # Fetch the channel
-        channel = self.bot.get_channel(YOUR_CHANNEL_ID)  # Replace with your channel ID
-        if channel is None:
-            print(f"Channel with ID {YOUR_CHANNEL_ID} not found.")
-            return
-
-        # Send the level-up message
-        await channel.send(f"{user.name} has reached level {self.xp_data[user_id]['level']}!")
-
 
 load_dotenv()
 
 bot = DiscordBot()
+
+# Liste des cogs à charger
+initial_extensions = [
+    "xp",         # Assurez-vous que vos cogs sont dans le même répertoire ou ajustez le chemin
+    "giveaway",
+    "moderation",
+    "fun",
+    "general",
+    "owner",
+    "template",
+    "vote",
+    "whois",
+    # Ajoutez d'autres cogs ici
+]
+
+# Chargement de tous les cogs
+if __name__ == "__main__":
+    for extension in initial_extensions:
+        try:
+            bot.load_extension(extension)
+            print(f"Extension '{extension}' chargée avec succès.")
+        except Exception as e:
+            print(f"Erreur lors du chargement de l'extension '{extension}': {e}")
+
+@bot.event
+async def on_ready():
+    print(f"Connecté en tant que {bot.user.name} ({bot.user.id})")
+
 bot.run(os.getenv("TOKEN"))

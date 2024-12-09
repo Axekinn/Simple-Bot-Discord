@@ -39,7 +39,7 @@ class XP(commands.Cog):
             print(f"Error saving XP data: {e}")
 
     def calculate_level(self, xp):
-        return math.floor(xp / 100) + 1  # Example: 100 XP per level
+        return math.floor(xp / 300) + 1  # Example: 100 XP per level
 
     async def add_xp(self, user_id, xp_amount):
         print(f"Adding {xp_amount} XP to user ID {user_id}")
@@ -87,8 +87,6 @@ class XP(commands.Cog):
 
         await self.add_xp(str(message.author.id), 10)  # Ensure user_id is a string
 
-        await self.bot.process_commands(message)
-
     @commands.command(name="getxp")
     async def get_xp(self, ctx):
         user_id = str(ctx.author.id)
@@ -109,6 +107,24 @@ class XP(commands.Cog):
             await ctx.send(f"{member.name}'s XP has been reset.")
         else:
             await ctx.send(f"{member.name} has no XP to reset.")
+
+    @commands.command(name='xp', help='Affiche votre nombre d\'XP actuel')
+    async def check_xp(self, ctx):
+        user_id = str(ctx.author.id)
+        if user_id in self.xp_data:
+            xp = self.xp_data[user_id]["xp"]
+            level = self.xp_data[user_id]["level"]
+        else:
+            xp = 0
+            level = 1
+
+        embed = discord.Embed(title="Votre Profil XP", color=0x00ff00)
+        embed.set_thumbnail(url=ctx.author.avatar.url)
+        embed.add_field(name="Utilisateur", value=ctx.author.display_name, inline=False)
+        embed.add_field(name="Niveau", value=str(level), inline=True)
+        embed.add_field(name="XP", value=str(xp), inline=True)
+
+        await ctx.send(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(XP(bot))
