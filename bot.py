@@ -303,17 +303,24 @@ initial_extensions = [
     "template",
     "vote",
     "whois",
+    "command_builder",
     # Ajoutez d'autres cogs ici
 ]
 
-# Chargement de tous les cogs
-if __name__ == "__main__":
+async def load_extensions():
     for extension in initial_extensions:
         try:
-            bot.load_extension(extension)
+            await bot.load_extension(extension)
             print(f"Extension '{extension}' chargée avec succès.")
         except Exception as e:
             print(f"Erreur lors du chargement de l'extension '{extension}': {e}")
+            
+# Chargement de tous les cogs
+if __name__ == "__main__":
+    async def main():
+        await load_extensions()
+        await bot.start(os.getenv("TOKEN"))
+
 
 @bot.event
 async def on_ready():
