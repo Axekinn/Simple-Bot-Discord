@@ -5,8 +5,8 @@ import json
 import os
 import math
 
-# Replace with your specific channel ID
-LEVEL_UP_CHANNEL_ID = 1104041737850196019  # Replace with your channel ID
+# Remplacez par l'ID de votre canal spécifique
+LEVEL_UP_CHANNEL_ID = 1104041737850196019  # Remplacez par l'ID de votre canal
 
 class XP(commands.Cog):
     def __init__(self, bot):
@@ -18,84 +18,74 @@ class XP(commands.Cog):
             try:
                 with open("xp_data.json", "r") as f:
                     data = json.load(f)
-                print("XP data loaded successfully.")
+                print("Données XP chargées avec succès.")
                 return data
             except json.JSONDecodeError:
-                print("Error: xp_data.json is not a valid JSON. Initializing empty XP data.")
+                print("Erreur : xp_data.json n'est pas un JSON valide. Initialisation des données XP vides.")
                 return {}
             except Exception as e:
-                print(f"Unexpected error while loading XP data: {e}")
+                print(f"Erreur inattendue lors du chargement des données XP : {e}")
                 return {}
         else:
-            print("xp_data.json not found. Initializing empty XP data.")
+            print("xp_data.json non trouvé. Initialisation des données XP vides.")
             return {}
 
     def save_xp_data(self):
         try:
             with open("xp_data.json", "w") as f:
                 json.dump(self.xp_data, f, indent=4)
-            print("XP data saved successfully.")
+            print("Données XP sauvegardées avec succès.")
         except Exception as e:
-            print(f"Error saving XP data: {e}")
+            print(f"Erreur lors de la sauvegarde des données XP : {e}")
 
     def calculate_level(self, xp):
-        return math.floor(xp / 300) + 1  # Example: 100 XP per level
+        return math.floor(xp / 300) + 1  # Exemple : 300 XP par niveau
 
     async def add_xp(self, user_id, xp_amount):
-        print(f"Adding {xp_amount} XP to user ID {user_id}")
+        print(f"Ajout de {xp_amount} XP à l'utilisateur ID {user_id}")
         if user_id in self.xp_data:
             self.xp_data[user_id]["xp"] += xp_amount
             new_level = self.calculate_level(self.xp_data[user_id]["xp"])
             if new_level > self.xp_data[user_id]["level"]:
                 self.xp_data[user_id]["level"] = new_level
                 await self.notify_level_up(user_id)
-            print(f"User {user_id} now has {self.xp_data[user_id]['xp']} XP and is level {self.xp_data[user_id]['level']}")
+            print(f"L'utilisateur {user_id} a maintenant {self.xp_data[user_id]['xp']} XP et est niveau {self.xp_data[user_id]['level']}")
         else:
             calculated_level = self.calculate_level(xp_amount)
             self.xp_data[user_id] = {"xp": xp_amount, "level": calculated_level}
-            print(f"User {user_id} added with {xp_amount} XP and level {calculated_level}")
+            print(f"L'utilisateur {user_id} ajouté avec {xp_amount} XP et niveau {calculated_level}")
         self.save_xp_data()
 
     async def notify_level_up(self, user_id):
         channel = self.bot.get_channel(LEVEL_UP_CHANNEL_ID)
         if channel is None:
-            print(f"Channel with ID {LEVEL_UP_CHANNEL_ID} not found.")
+            print(f"Canal avec l'ID {LEVEL_UP_CHANNEL_ID} introuvable.")
             return
 
-        user = self.bot.get_user(user_id)
+        user = self.bot.get_user(int(user_id))
         if user is None:
             try:
-                user = await self.bot.fetch_user(user_id)
+                user = await self.bot.fetch_user(int(user_id))
             except discord.NotFound:
-                print(f"User with ID {user_id} not found.")
+                print(f"Utilisateur avec l'ID {user_id} introuvable.")
                 return
             except discord.HTTPException as e:
-                print(f"HTTPException while fetching user with ID {user_id}: {e}")
+                print(f"HTTPException lors de la récupération de l'utilisateur avec l'ID {user_id} : {e}")
                 return
 
         if user:
             try:
                 await channel.send(f"Félicitations {user}! Vous avez atteint le niveau {self.xp_data[user_id]['level']}!")
-                print(f"Level up message sent to {user.name} in channel ID {LEVEL_UP_CHANNEL_ID}")
+                print(f"Message de montée en niveau envoyé à {user.name} dans le canal ID {LEVEL_UP_CHANNEL_ID}")
             except discord.Forbidden:
-                print(f"Cannot send message to channel ID {LEVEL_UP_CHANNEL_ID}.")
+                print(f"Impossible d'envoyer un message au canal ID {LEVEL_UP_CHANNEL_ID}.")
 
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author.bot:
             return
 
-        await self.add_xp(str(message.author.id), 10)  # Ensure user_id is a string
-
-    @commands.command(name="getxp")
-    async def get_xp(self, ctx):
-        user_id = str(ctx.author.id)
-        if user_id in self.xp_data:
-            xp = self.xp_data[user_id]["xp"]
-            level = self.xp_data[user_id]["level"]
-            await ctx.send(f"Vous avez {xp} XP et vous êtes au niveau {level}.")
-        else:
-            await ctx.send("Vous n'avez pas encore de XP.")
+        await self.add_xp(str(message.author.id), 10)  # Assurez-vous que user_id est une chaîne
 
     @commands.command(name="resetxp")
     @commands.has_permissions(administrator=True)
@@ -104,9 +94,9 @@ class XP(commands.Cog):
         if user_id in self.xp_data:
             self.xp_data[user_id] = {"xp": 0, "level": 1}
             self.save_xp_data()
-            await ctx.send(f"{member.name}'s XP has been reset.")
+            await ctx.send(f"L'XP de {member.name} a été réinitialisée.")
         else:
-            await ctx.send(f"{member.name} has no XP to reset.")
+            await ctx.send(f"{member.name} n'a pas d'XP à réinitialiser.")
 
     @commands.command(name='xp', help='Affiche votre nombre d\'XP actuel')
     async def check_xp(self, ctx):

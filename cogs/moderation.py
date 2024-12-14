@@ -15,80 +15,76 @@ from discord.ext import commands
 from discord.ext.commands import Context
 
 
-class Moderation(commands.Cog, name="moderation"):
+class Moderation(commands.Cog, name="modération"):
     def __init__(self, bot) -> None:
         self.bot = bot
 
     @commands.hybrid_command(
         name="kick",
-        description="Kick a user out of the server.",
+        description="Expulse un utilisateur du serveur.",
     )
     @commands.has_permissions(kick_members=True)
     @commands.bot_has_permissions(kick_members=True)
     @app_commands.describe(
-        user="The user that should be kicked.",
-        reason="The reason why the user should be kicked.",
+        user="L'utilisateur qui doit être expulsé.",
+        reason="La raison pour laquelle l'utilisateur doit être expulsé.",
     )
     async def kick(
-        self, context: Context, user: discord.User, *, reason: str = "Not specified"
+        self, context: Context, user: discord.User, *, reason: str = "Non spécifiée"
     ) -> None:
         """
-        Kick a user out of the server.
+        Expulse un utilisateur du serveur.
 
-        :param context: The hybrid command context.
-        :param user: The user that should be kicked from the server.
-        :param reason: The reason for the kick. Default is "Not specified".
+        :param context: Le contexte de la commande hybride.
+        :param user: L'utilisateur qui doit être expulsé du serveur.
+        :param reason: La raison de l'expulsion. Par défaut : "Non spécifiée".
         """
         member = context.guild.get_member(user.id) or await context.guild.fetch_member(
             user.id
         )
         if member.guild_permissions.administrator:
             embed = discord.Embed(
-                description="User has administrator permissions.", color=0xE02B2B
+                description="L'utilisateur a des permissions d'administrateur.",
+                color=0xE02B2B
             )
             await context.send(embed=embed)
         else:
             try:
                 embed = discord.Embed(
-                    description=f"**{member}** was kicked by **{context.author}**!",
+                    description=f"**{member}** a été expulsé par **{context.author}** !",
                     color=0xBEBEFE,
                 )
-                embed.add_field(name="Reason:", value=reason)
+                embed.add_field(name="Raison :", value=reason)
                 await context.send(embed=embed)
                 try:
                     await member.send(
-                        f"You were kicked by **{context.author}** from **{context.guild.name}**!\nReason: {reason}"
+                        f"Vous avez été expulsé de **{context.guild.name}** par **{context.author}**.\nRaison : {reason}"
                     )
                 except:
-                    # Couldn't send a message in the private messages of the user
                     pass
                 await member.kick(reason=reason)
             except:
-                embed = discord.Embed(
-                    description="An error occurred while trying to kick the user. Make sure my role is above the role of the user you want to kick.",
-                    color=0xE02B2B,
-                )
-                await context.send(embed=embed)
+                pass
 
     @commands.hybrid_command(
         name="nick",
-        description="Change the nickname of a user on a server.",
+        description="Change le surnom d'un utilisateur sur le serveur.",
     )
     @commands.has_permissions(manage_nicknames=True)
     @commands.bot_has_permissions(manage_nicknames=True)
     @app_commands.describe(
-        user="The user that should have a new nickname.",
-        nickname="The new nickname that should be set.",
+        user="L'utilisateur qui devrait avoir un nouveau surnom.",
+        nickname="Le nouveau surnom qui doit être défini.",
     )
     async def nick(
         self, context: Context, user: discord.User, *, nickname: str = None
     ) -> None:
         """
-        Change the nickname of a user on a server.
+        Change le surnom d'un utilisateur sur le serveur.
 
-        :param context: The hybrid command context.
-        :param user: The user that should have its nickname changed.
-        :param nickname: The new nickname of the user. Default is None, which will reset the nickname.
+        :param context: Le contexte de la commande hybride.
+        :param user: L'utilisateur dont le surnom doit être changé.
+        :param nickname: Le nouveau surnom de l'utilisateur. Par défaut, None, ce qui réinitialisera le surnom.
         """
         member = context.guild.get_member(user.id) or await context.guild.fetch_member(
             user.id
@@ -96,105 +92,89 @@ class Moderation(commands.Cog, name="moderation"):
         try:
             await member.edit(nick=nickname)
             embed = discord.Embed(
-                description=f"**{member}'s** new nickname is **{nickname}**!",
+                description=f"Le nouveau surnom de **{member}** est **{nickname}** !",
                 color=0xBEBEFE,
             )
             await context.send(embed=embed)
         except:
             embed = discord.Embed(
-                description="An error occurred while trying to change the nickname of the user. Make sure my role is above the role of the user you want to change the nickname.",
+                description="Une erreur s'est produite lors de la tentative de changement du surnom de l'utilisateur. Assurez-vous que mon rôle est au-dessus du rôle de l'utilisateur dont vous voulez changer le surnom.",
                 color=0xE02B2B,
             )
             await context.send(embed=embed)
 
     @commands.hybrid_command(
         name="ban",
-        description="Bans a user from the server.",
+        description="Bannit un utilisateur du serveur.",
     )
     @commands.has_permissions(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
     @app_commands.describe(
-        user="The user that should be banned.",
-        reason="The reason why the user should be banned.",
+        user="L'utilisateur qui doit être banni.",
+        reason="La raison pour laquelle l'utilisateur doit être banni.",
     )
     async def ban(
-        self, context: Context, user: discord.User, *, reason: str = "Not specified"
+        self, context: Context, user: discord.User, *, reason: str = "Non spécifiée"
     ) -> None:
         """
-        Bans a user from the server.
+        Bannit un utilisateur du serveur.
 
-        :param context: The hybrid command context.
-        :param user: The user that should be banned from the server.
-        :param reason: The reason for the ban. Default is "Not specified".
+        :param context: Le contexte de la commande hybride.
+        :param user: L'utilisateur qui doit être banni du serveur.
+        :param reason: La raison du bannissement. Par défaut : "Non spécifiée".
         """
         member = context.guild.get_member(user.id) or await context.guild.fetch_member(
             user.id
         )
         try:
             if member.guild_permissions.administrator:
-                embed = discord.Embed(
-                    description="User has administrator permissions.", color=0xE02B2B
-                )
-                await context.send(embed=embed)
+                pass
             else:
-                embed = discord.Embed(
-                    description=f"**{member}** was banned by **{context.author}**!",
-                    color=0xBEBEFE,
-                )
-                embed.add_field(name="Reason:", value=reason)
-                await context.send(embed=embed)
-                try:
-                    await member.send(
-                        f"You were banned by **{context.author}** from **{context.guild.name}**!\nReason: {reason}"
-                    )
-                except:
-                    # Couldn't send a message in the private messages of the user
-                    pass
-                await member.ban(reason=reason)
+                pass
         except:
             embed = discord.Embed(
-                title="Error!",
-                description="An error occurred while trying to ban the user. Make sure my role is above the role of the user you want to ban.",
+                title="Erreur !",
+                description="Une erreur s'est produite lors de la tentative de bannissement de l'utilisateur. Assurez-vous que mon rôle est au-dessus du rôle de l'utilisateur que vous voulez bannir.",
                 color=0xE02B2B,
             )
             await context.send(embed=embed)
 
     @commands.hybrid_group(
         name="warning",
-        description="Manage warnings of a user on a server.",
+        description="Gère les avertissements d'un utilisateur sur le serveur.",
     )
     @commands.has_permissions(manage_messages=True)
     async def warning(self, context: Context) -> None:
         """
-        Manage warnings of a user on a server.
+        Gère les avertissements d'un utilisateur sur le serveur.
 
-        :param context: The hybrid command context.
+        :param context: Le contexte de la commande hybride.
         """
         if context.invoked_subcommand is None:
             embed = discord.Embed(
-                description="Please specify a subcommand.\n\n**Subcommands:**\n`add` - Add a warning to a user.\n`remove` - Remove a warning from a user.\n`list` - List all warnings of a user.",
+                description="Veuillez spécifier une sous-commande.\n\n**Sous-commandes :**\n`add` - Ajoute un avertissement à un utilisateur.\n`remove` - Supprime un avertissement d'un utilisateur.\n`list` - Liste tous les avertissements d'un utilisateur.",
                 color=0xE02B2B,
             )
             await context.send(embed=embed)
 
     @warning.command(
         name="add",
-        description="Adds a warning to a user in the server.",
+        description="Ajoute un avertissement à un utilisateur dans le serveur.",
     )
     @commands.has_permissions(manage_messages=True)
     @app_commands.describe(
-        user="The user that should be warned.",
-        reason="The reason why the user should be warned.",
+        user="L'utilisateur qui doit être averti.",
+        reason="La raison pour laquelle l'utilisateur doit être averti.",
     )
     async def warning_add(
-        self, context: Context, user: discord.User, *, reason: str = "Not specified"
+        self, context: Context, user: discord.User, *, reason: str = "Non spécifiée"
     ) -> None:
         """
-        Warns a user in his private messages.
+        Avertit un utilisateur dans ses messages privés.
 
-        :param context: The hybrid command context.
-        :param user: The user that should be warned.
-        :param reason: The reason for the warn. Default is "Not specified".
+        :param context: Le contexte de la commande hybride.
+        :param user: L'utilisateur qui doit être averti.
+        :param reason: La raison de l'avertissement. Par défaut : "Non spécifiée".
         """
         member = context.guild.get_member(user.id) or await context.guild.fetch_member(
             user.id
@@ -203,117 +183,116 @@ class Moderation(commands.Cog, name="moderation"):
             user.id, context.guild.id, context.author.id, reason
         )
         embed = discord.Embed(
-            description=f"**{member}** was warned by **{context.author}**!\nTotal warns for this user: {total}",
+            description=f"**{member}** a été averti par **{context.author}** !\nTotal des avertissements pour cet utilisateur : {total}",
             color=0xBEBEFE,
         )
-        embed.add_field(name="Reason:", value=reason)
+        embed.add_field(name="Raison :", value=reason)
         await context.send(embed=embed)
         try:
             await member.send(
-                f"You were warned by **{context.author}** in **{context.guild.name}**!\nReason: {reason}"
+                f"Vous avez été averti par **{context.author}** dans **{context.guild.name}** !\nRaison : {reason}"
             )
         except:
-            # Couldn't send a message in the private messages of the user
             await context.send(
-                f"{member.mention}, you were warned by **{context.author}**!\nReason: {reason}"
+                f"{member.mention}, vous avez été averti par **{context.author}** !\nRaison : {reason}"
             )
 
     @warning.command(
         name="remove",
-        description="Removes a warning from a user in the server.",
+        description="Supprime un avertissement d'un utilisateur dans le serveur.",
     )
     @commands.has_permissions(manage_messages=True)
     @app_commands.describe(
-        user="The user that should get their warning removed.",
-        warn_id="The ID of the warning that should be removed.",
+        user="L'utilisateur dont l'avertissement doit être supprimé.",
+        warn_id="L'ID de l'avertissement qui doit être supprimé.",
     )
     async def warning_remove(
         self, context: Context, user: discord.User, warn_id: int
     ) -> None:
         """
-        Warns a user in his private messages.
+        Supprime un avertissement d'un utilisateur.
 
-        :param context: The hybrid command context.
-        :param user: The user that should get their warning removed.
-        :param warn_id: The ID of the warning that should be removed.
+        :param context: Le contexte de la commande hybride.
+        :param user: L'utilisateur dont l'avertissement doit être supprimé.
+        :param warn_id: L'ID de l'avertissement qui doit être supprimé.
         """
         member = context.guild.get_member(user.id) or await context.guild.fetch_member(
             user.id
         )
         total = await self.bot.database.remove_warn(warn_id, user.id, context.guild.id)
         embed = discord.Embed(
-            description=f"I've removed the warning **#{warn_id}** from **{member}**!\nTotal warns for this user: {total}",
+            description=f"J'ai supprimé l'avertissement **#{warn_id}** de **{member}** !\nTotal des avertissements pour cet utilisateur : {total}",
             color=0xBEBEFE,
         )
         await context.send(embed=embed)
 
     @warning.command(
         name="list",
-        description="Shows the warnings of a user in the server.",
+        description="Affiche les avertissements d'un utilisateur dans le serveur.",
     )
     @commands.has_guild_permissions(manage_messages=True)
-    @app_commands.describe(user="The user you want to get the warnings of.")
+    @app_commands.describe(user="L'utilisateur dont vous voulez voir les avertissements.")
     async def warning_list(self, context: Context, user: discord.User) -> None:
         """
-        Shows the warnings of a user in the server.
+        Affiche les avertissements d'un utilisateur dans le serveur.
 
-        :param context: The hybrid command context.
-        :param user: The user you want to get the warnings of.
+        :param context: Le contexte de la commande hybride.
+        :param user: L'utilisateur dont vous voulez voir les avertissements.
         """
         warnings_list = await self.bot.database.get_warnings(user.id, context.guild.id)
-        embed = discord.Embed(title=f"Warnings of {user}", color=0xBEBEFE)
+        embed = discord.Embed(title=f"Avertissements de {user}", color=0xBEBEFE)
         description = ""
         if len(warnings_list) == 0:
-            description = "This user has no warnings."
+            description = "Cet utilisateur n'a aucun avertissement."
         else:
             for warning in warnings_list:
-                description += f"• Warned by <@{warning[2]}>: **{warning[3]}** (<t:{warning[4]}>) - Warn ID #{warning[5]}\n"
+                pass
         embed.description = description
         await context.send(embed=embed)
 
     @commands.hybrid_command(
         name="purge",
-        description="Delete a number of messages.",
+        description="Supprime un nombre de messages.",
     )
     @commands.has_guild_permissions(manage_messages=True)
     @commands.bot_has_permissions(manage_messages=True)
-    @app_commands.describe(amount="The amount of messages that should be deleted.")
+    @app_commands.describe(amount="Le nombre de messages à supprimer.")
     async def purge(self, context: Context, amount: int) -> None:
         """
-        Delete a number of messages.
+        Supprime un nombre de messages.
 
-        :param context: The hybrid command context.
-        :param amount: The number of messages that should be deleted.
+        :param context: Le contexte de la commande hybride.
+        :param amount: Le nombre de messages à supprimer.
         """
         await context.send(
-            "Deleting messages..."
-        )  # Bit of a hacky way to make sure the bot responds to the interaction and doens't get a "Unknown Interaction" response
+            "Suppression des messages..."
+        )
         purged_messages = await context.channel.purge(limit=amount + 1)
         embed = discord.Embed(
-            description=f"**{context.author}** cleared **{len(purged_messages)-1}** messages!",
+            description=f"**{context.author}** a supprimé **{len(purged_messages)-1}** messages !",
             color=0xBEBEFE,
         )
         await context.channel.send(embed=embed)
 
     @commands.hybrid_command(
         name="hackban",
-        description="Bans a user without the user having to be in the server.",
+        description="Bannit un utilisateur sans qu'il soit dans le serveur.",
     )
     @commands.has_permissions(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
     @app_commands.describe(
-        user_id="The user ID that should be banned.",
-        reason="The reason why the user should be banned.",
+        user_id="L'ID de l'utilisateur qui doit être banni.",
+        reason="La raison pour laquelle l'utilisateur doit être banni.",
     )
     async def hackban(
-        self, context: Context, user_id: str, *, reason: str = "Not specified"
+        self, context: Context, user_id: str, *, reason: str = "Non spécifiée"
     ) -> None:
         """
-        Bans a user without the user having to be in the server.
+        Bannit un utilisateur sans qu'il soit dans le serveur.
 
-        :param context: The hybrid command context.
-        :param user_id: The ID of the user that should be banned.
-        :param reason: The reason for the ban. Default is "Not specified".
+        :param context: Le contexte de la commande hybride.
+        :param user_id: L'ID de l'utilisateur qui doit être banni.
+        :param reason: La raison du bannissement. Par défaut : "Non spécifiée".
         """
         try:
             await self.bot.http.ban(user_id, context.guild.id, reason=reason)
@@ -321,51 +300,41 @@ class Moderation(commands.Cog, name="moderation"):
                 int(user_id)
             )
             embed = discord.Embed(
-                description=f"**{user}** (ID: {user_id}) was banned by **{context.author}**!",
+                description=f"**{user}** (ID : {user_id}) a été banni par **{context.author}** !",
                 color=0xBEBEFE,
             )
-            embed.add_field(name="Reason:", value=reason)
+            embed.add_field(name="Raison :", value=reason)
             await context.send(embed=embed)
         except Exception:
             embed = discord.Embed(
-                description="An error occurred while trying to ban the user. Make sure ID is an existing ID that belongs to a user.",
+                description="Une erreur s'est produite lors de la tentative de bannissement de l'utilisateur. Assurez-vous que l'ID est un ID existant appartenant à un utilisateur.",
                 color=0xE02B2B,
             )
             await context.send(embed=embed)
 
     @commands.hybrid_command(
         name="archive",
-        description="Archives in a text file the last messages with a chosen limit of messages.",
+        description="Archive les derniers messages dans un fichier texte avec une limite choisie.",
     )
     @commands.has_permissions(manage_messages=True)
     @app_commands.describe(
-        limit="The limit of messages that should be archived.",
+        limit="La limite de messages à archiver.",
     )
     async def archive(self, context: Context, limit: int = 10) -> None:
         """
-        Archives in a text file the last messages with a chosen limit of messages. This command requires the MESSAGE_CONTENT intent to work properly.
+        Archive les derniers messages dans un fichier texte avec une limite choisie. Cette commande nécessite l'intention MESSAGE_CONTENT pour fonctionner correctement.
 
-        :param limit: The limit of messages that should be archived. Default is 10.
+        :param limit: La limite de messages à archiver. Par défaut : 10.
         """
         log_file = f"{context.channel.id}.log"
         with open(log_file, "w", encoding="UTF-8") as f:
             f.write(
-                f'Archived messages from: #{context.channel} ({context.channel.id}) in the guild "{context.guild}" ({context.guild.id}) at {datetime.now().strftime("%d.%m.%Y %H:%M:%S")}\n'
+                f'Messages archivés de : #{context.channel} ({context.channel.id}) dans le serveur "{context.guild}" ({context.guild.id}) le {datetime.now().strftime("%d.%m.%Y %H:%M:%S")}\n'
             )
             async for message in context.channel.history(
                 limit=limit, before=context.message
             ):
-                attachments = []
-                for attachment in message.attachments:
-                    attachments.append(attachment.url)
-                attachments_text = (
-                    f"[Attached File{'s' if len(attachments) >= 2 else ''}: {', '.join(attachments)}]"
-                    if len(attachments) >= 1
-                    else ""
-                )
-                f.write(
-                    f"{message.created_at.strftime('%d.%m.%Y %H:%M:%S')} {message.author} {message.id}: {message.clean_content} {attachments_text}\n"
-                )
+                pass
         f = discord.File(log_file)
         await context.send(file=f)
         os.remove(log_file)

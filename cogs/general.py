@@ -1,7 +1,7 @@
 """
 Copyright © Krypton 2019-Present - https://github.com/kkrypt0nn (https://krypton.ninja)
 Description:
-🐍 A simple template to start to code your own and personalized Discord bot in Python
+🐍 Un modèle simple pour commencer à coder votre propre bot Discord personnalisé en Python
 
 Version: 6.2.0
 """
@@ -16,16 +16,23 @@ from discord.ext import commands
 from discord.ext.commands import Context
 
 
-class FeedbackForm(discord.ui.Modal, title="Feeedback"):
+class FeedbackForm(discord.ui.Modal):
+    def __init__(self):
+        super().__init__(title="Retour d'information")
     feedback = discord.ui.TextInput(
-        label="What do you think about this bot?",
+        label="Que pensez-vous de ce bot ?",
         style=discord.TextStyle.long,
-        placeholder="Type your answer here...",
+        placeholder="Tapez votre réponse ici...",
         required=True,
         max_length=256,
     )
 
     async def on_submit(self, interaction: discord.Interaction):
+        """
+        Gère la soumission du formulaire de retour d'information.
+
+        :param interaction: L'interaction qui a déclenché la soumission.
+        """
         self.interaction = interaction
         self.answer = str(self.feedback)
         self.stop()
@@ -35,23 +42,23 @@ class General(commands.Cog, name="general"):
     def __init__(self, bot) -> None:
         self.bot = bot
         self.context_menu_user = app_commands.ContextMenu(
-            name="Grab ID", callback=self.grab_id
+            name="Obtenir l'ID", callback=self.grab_id
         )
         self.bot.tree.add_command(self.context_menu_user)
         self.context_menu_message = app_commands.ContextMenu(
-            name="Remove spoilers", callback=self.remove_spoilers
+            name="Supprimer les spoilers", callback=self.remove_spoilers
         )
         self.bot.tree.add_command(self.context_menu_message)
 
-    # Message context menu command
+    # Commande de menu contextuel de message
     async def remove_spoilers(
         self, interaction: discord.Interaction, message: discord.Message
     ) -> None:
         """
-        Removes the spoilers from the message. This command requires the MESSAGE_CONTENT intent to work properly.
+        Supprime les spoilers du message. Cette commande nécessite l'intention MESSAGE_CONTENT pour fonctionner correctement.
 
-        :param interaction: The application command interaction.
-        :param message: The message that is being interacted with.
+        :param interaction: L'interaction de la commande d'application.
+        :param message: Le message avec lequel on interagit.
         """
         spoiler_attachment = None
         for attachment in message.attachments:
@@ -59,7 +66,7 @@ class General(commands.Cog, name="general"):
                 spoiler_attachment = attachment
                 break
         embed = discord.Embed(
-            title="Message without spoilers",
+            title="Message sans spoilers",
             description=message.content.replace("||", ""),
             color=0xBEBEFE,
         )
@@ -67,213 +74,203 @@ class General(commands.Cog, name="general"):
             embed.set_image(url=attachment.url)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    # User context menu command
+    # Commande de menu contextuel d'utilisateur
     async def grab_id(
         self, interaction: discord.Interaction, user: discord.User
     ) -> None:
         """
-        Grabs the ID of the user.
+        Récupère l'ID de l'utilisateur.
 
-        :param interaction: The application command interaction.
-        :param user: The user that is being interacted with.
+        :param interaction: L'interaction de la commande d'application.
+        :param user: L'utilisateur avec lequel on interagit.
         """
         embed = discord.Embed(
-            description=f"The ID of {user.mention} is `{user.id}`.",
+            description=f"L'ID de {user.mention} est `{user.id}`.",
             color=0xBEBEFE,
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @commands.hybrid_command(
-        name="help", description="List all commands the bot has loaded."
-    )
-    async def help(self, context: Context) -> None:
-        prefix = self.bot.config["prefix"]
-        embed = discord.Embed(
-            title="Help", description="List of available commands:", color=0xBEBEFE
-        )
-        for i in self.bot.cogs:
-            if i == "owner" and not (await self.bot.is_owner(context.author)):
-                continue
-            cog = self.bot.get_cog(i.lower())
-            commands = cog.get_commands()
-            data = []
-            for command in commands:
-                description = command.description.partition("\n")[0]
-                data.append(f"{prefix}{command.name} - {description}")
-            help_text = "\n".join(data)
-            embed.add_field(
-                name=i.capitalize(), value=f"```{help_text}```", inline=False
-            )
-        await context.send(embed=embed)
+    @commands.hybrid_command(name="help")
+    async def help(self, ctx):
+        embed = discord.Embed(title="Aide", description="Liste des commandes", color=0x00ff00)
+        for cog_name, cog in self.bot.cogs.items():
+            if cog is not None:
+                commands = cog.get_commands()
+                command_list = "\n".join([command.name for command in commands])
+                embed.add_field(name=cog_name, value=command_list, inline=False)
+        await ctx.send(embed=embed)
 
-    @commands.hybrid_command(
-        name="botinfo",
-        description="Get some useful (or not) information about the bot.",
-    )
-    async def botinfo(self, context: Context) -> None:
+    @commands.hybrid_command(name="botinfo", description="Obtenir des informations utiles (ou non) sur le bot.")
+    async def botinfo(self, context: commands.Context) -> None:
         """
-        Get some useful (or not) information about the bot.
+        Obtenir des informations utiles (ou non) sur le bot.
 
-        :param context: The hybrid command context.
+        :param context: Le contexte de la commande hybride.
         """
         embed = discord.Embed(
-            description="Used [Krypton's](https://krypton.ninja) template",
+            description="Utilisation du modèle [Krypton](https://krypton.ninja)",
             color=0xBEBEFE,
         )
-        embed.set_author(name="Bot Information")
-        embed.add_field(name="Owner:", value="Krypton#7331", inline=True)
+        embed.set_author(name="Informations sur le bot")
+        embed.add_field(name="Propriétaire:", value="_axekin", inline=True)
         embed.add_field(
-            name="Python Version:", value=f"{platform.python_version()}", inline=True
+            name="Version de Python:", value=f"{platform.python_version()}", inline=True
         )
         embed.add_field(
-            name="Prefix:",
-            value=f"/ (Slash Commands) or {self.bot.config['prefix']} for normal commands",
+            name="Préfixe:",
+            value=f"/ (Commandes Slash) ou {self.bot.command_prefix} pour les commandes normales",
             inline=False,
         )
-        embed.set_footer(text=f"Requested by {context.author}")
+        embed.set_footer(text=f"Demandé par {context.author}")
         await context.send(embed=embed)
 
     @commands.hybrid_command(
         name="serverinfo",
-        description="Get some useful (or not) information about the server.",
+        description="Obtenir des informations utiles (ou non) sur le serveur.",
     )
-    async def serverinfo(self, context: Context) -> None:
+    async def serverinfo(self, context: commands.Context) -> None:
         """
-        Get some useful (or not) information about the server.
+        Obtenir des informations utiles (ou non) sur le serveur.
 
-        :param context: The hybrid command context.
+        :param context: Le contexte de la commande hybride.
         """
         roles = [role.name for role in context.guild.roles]
         num_roles = len(roles)
         if num_roles > 50:
             roles = roles[:50]
-            roles.append(f">>>> Displaying [50/{num_roles}] Roles")
-        roles = ", ".join(roles)
-
-        embed = discord.Embed(
-            title="**Server Name:**", description=f"{context.guild}", color=0xBEBEFE
-        )
-        if context.guild.icon is not None:
-            embed.set_thumbnail(url=context.guild.icon.url)
-        embed.add_field(name="Server ID", value=context.guild.id)
-        embed.add_field(name="Member Count", value=context.guild.member_count)
-        embed.add_field(
-            name="Text/Voice Channels", value=f"{len(context.guild.channels)}"
-        )
-        embed.add_field(name=f"Roles ({len(context.guild.roles)})", value=roles)
-        embed.set_footer(text=f"Created at: {context.guild.created_at}")
-        await context.send(embed=embed)
+            roles.append(f">>>> Affichage de [50/{num_roles}] rôles")
+        await context.send(embed=discord.Embed(title="Informations sur le serveur", description="\n".join(roles), color=0x00ff00))
 
     @commands.hybrid_command(
         name="ping",
-        description="Check if the bot is alive.",
+        description="Vérifier si le bot est vivant.",
     )
     async def ping(self, context: Context) -> None:
         """
-        Check if the bot is alive.
+        Vérifier si le bot est vivant.
 
-        :param context: The hybrid command context.
+        :param context: Le contexte de la commande hybride.
         """
         embed = discord.Embed(
             title="🏓 Pong!",
-            description=f"The bot latency is {round(self.bot.latency * 1000)}ms.",
+            description=f"Le temps de latence du bot est de {round(self.bot.latency * 1000)}ms.",
             color=0xBEBEFE,
         )
         await context.send(embed=embed)
 
     @commands.hybrid_command(
         name="invite",
-        description="Get the invite link of the bot to be able to invite it.",
+        description="Obtenir le lien d'invitation du bot pour pouvoir l'inviter.",
     )
     async def invite(self, context: Context) -> None:
         """
-        Get the invite link of the bot to be able to invite it.
+        Obtenir le lien d'invitation du bot pour pouvoir l'inviter.
 
-        :param context: The hybrid command context.
+        :param context: Le contexte de la commande hybride.
         """
         embed = discord.Embed(
-            description=f"Invite me by clicking [here]({self.bot.config['invite_link']}).",
+            description=f"Invitez-moi en cliquant [ici]({self.bot.config['invite_link']}).",
             color=0xD75BF4,
         )
         try:
             await context.author.send(embed=embed)
-            await context.send("I sent you a private message!")
+            await context.send("Je vous ai envoyé un message privé !")
         except discord.Forbidden:
             await context.send(embed=embed)
 
     @commands.hybrid_command(
         name="server",
-        description="Get the invite link of the discord server of the bot for some support.",
+        description="Obtenez le lien d'invitation du serveur discord du bot pour obtenir de l'aide.",
     )
     async def server(self, context: Context) -> None:
         """
-        Get the invite link of the discord server of the bot for some support.
+        Obtenez le lien d'invitation du serveur discord du bot pour obtenir de l'aide.
 
-        :param context: The hybrid command context.
+        :param context: Le contexte de la commande hybride.
         """
         embed = discord.Embed(
-            description=f"Join the support server for the bot by clicking [here](https://discord.gg/mTBrXyWxAF).",
+            description=f"Rejoignez le serveur de support pour le bot en cliquant [ici](https://discord.com/invite/emulationfr).",
             color=0xD75BF4,
         )
         try:
             await context.author.send(embed=embed)
-            await context.send("I sent you a private message!")
+            await context.send("Je vous ai envoyé un message privé !")
         except discord.Forbidden:
             await context.send(embed=embed)
 
     @commands.hybrid_command(
         name="8ball",
-        description="Ask any question to the bot.",
+        description="Posez n'importe quelle question au robot.",
     )
-    @app_commands.describe(question="The question you want to ask.")
+    @app_commands.describe(question="La question que vous voulez poser.")
     async def eight_ball(self, context: Context, *, question: str) -> None:
         """
-        Ask any question to the bot.
+        Posez n'importe quelle question au robot.
 
-        :param context: The hybrid command context.
-        :param question: The question that should be asked by the user.
+        :param context: Le contexte de la commande hybride.
+        :param question: La question que vous voulez poser.
         """
         answers = [
-            "It is certain.",
-            "It is decidedly so.",
-            "You may rely on it.",
-            "Without a doubt.",
-            "Yes - definitely.",
-            "As I see, yes.",
-            "Most likely.",
-            "Outlook good.",
-            "Yes.",
-            "Signs point to yes.",
-            "Reply hazy, try again.",
-            "Ask again later.",
-            "Better not tell you now.",
-            "Cannot predict now.",
-            "Concentrate and ask again later.",
-            "Don't count on it.",
-            "My reply is no.",
-            "My sources say no.",
-            "Outlook not so good.",
-            "Very doubtful.",
+            "C'est certain.",
+            "Sans aucun doute.",
+            "Vous pouvez compter dessus.",
+            "Oui - définitivement.",
+            "Très probable.",
+            "Les perspectives sont bonnes.",
+            "Oui.",
+            "Les signes indiquent que oui.",
+            "Réponse floue, réessayez.",
+            "Demandez plus tard.",
+            "Mieux vaut ne pas vous le dire maintenant.",
+            "Impossible de prédire maintenant.",
+            "Concentrez-vous et demandez à nouveau.",
+            "Ne comptez pas dessus.",
+            "Ma réponse est non.",
+            "Mes sources disent non.",
+            "Les perspectives ne sont pas si bonnes.",
+            "Très douteux.",
+            "Absolument.",
+            "Je ne pense pas.",
+            "C'est possible.",
+            "Je ne peux pas le dire maintenant.",
+            "C'est une certitude.",
+            "Je ne suis pas sûr.",
+            "Oui, mais avec des réserves.",
+            "Non, pas du tout.",
+            "Les chances sont faibles.",
+            "Les chances sont élevées.",
+            "Je dirais oui.",
+            "Je dirais non.",
+            "Peut-être.",
+            "Probablement pas.",
+            "Probablement oui.",
+            "Les signes sont flous.",
+            "Les signes sont clairs.",
+            "Je ne peux pas répondre maintenant.",
+            "Essayez encore.",
+            "Demandez à nouveau plus tard.",
+            "Je ne sais pas.",
+            "Je ne peux pas prédire cela.",
         ]
         embed = discord.Embed(
-            title="**My Answer:**",
+            title="**Ma réponse :**",
             description=f"{random.choice(answers)}",
             color=0xBEBEFE,
         )
-        embed.set_footer(text=f"The question was: {question}")
+        embed.set_footer(text=f"La question était : {question}")
         await context.send(embed=embed)
 
     @commands.hybrid_command(
         name="bitcoin",
-        description="Get the current price of bitcoin.",
+        description="Obtenez le prix actuel du bitcoin.",
     )
     async def bitcoin(self, context: Context) -> None:
         """
-        Get the current price of bitcoin.
+        Obtenez le prix actuel du bitcoin.
 
-        :param context: The hybrid command context.
+        :param context: Le contexte de la commande hybride.
         """
-        # This will prevent your bot from stopping everything when doing a web request - see: https://discordpy.readthedocs.io/en/stable/faq.html#how-do-i-make-a-web-request
+        # Cela empêchera votre bot de tout arrêter lors d'une requête web - voir : https://discordpy.readthedocs.io/en/stable/faq.html#how-do-i-make-a-web-request
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 "https://api.coindesk.com/v1/bpi/currentprice/BTC.json"
@@ -281,26 +278,26 @@ class General(commands.Cog, name="general"):
                 if request.status == 200:
                     data = await request.json()
                     embed = discord.Embed(
-                        title="Bitcoin price",
-                        description=f"The current price is {data['bpi']['USD']['rate']} :dollar:",
+                        title="Prix du Bitcoin",
+                        description=f"Le prix actuel est de {data['bpi']['USD']['rate']} :dollar:",
                         color=0xBEBEFE,
                     )
                 else:
                     embed = discord.Embed(
-                        title="Error!",
-                        description="There is something wrong with the API, please try again later",
+                        title="Erreur !",
+                        description="Il y a un problème avec l'API, veuillez réessayer plus tard.",
                         color=0xE02B2B,
                     )
                 await context.send(embed=embed)
 
     @app_commands.command(
-        name="feedback", description="Submit a feedback for the owners of the bot"
+        name="feedback", description="Soumettre un retour d'information aux propriétaires du bot"
     )
     async def feedback(self, interaction: discord.Interaction) -> None:
         """
-        Submit a feedback for the owners of the bot.
+        Soumettre un retour d'information aux propriétaires du bot.
 
-        :param context: The hybrid command context.
+        :param context: Le contexte de la commande hybride.
         """
         feedback_form = FeedbackForm()
         await interaction.response.send_modal(feedback_form)
@@ -309,7 +306,7 @@ class General(commands.Cog, name="general"):
         interaction = feedback_form.interaction
         await interaction.response.send_message(
             embed=discord.Embed(
-                description="Thank you for your feedback, the owners have been notified about it.",
+                description="Merci pour votre retour, les propriétaires ont été informés.",
                 color=0xBEBEFE,
             )
         )
@@ -317,12 +314,10 @@ class General(commands.Cog, name="general"):
         app_owner = (await self.bot.application_info()).owner
         await app_owner.send(
             embed=discord.Embed(
-                title="New Feedback",
-                description=f"{interaction.user} (<@{interaction.user.id}>) has submitted a new feedback:\n```\n{feedback_form.answer}\n```",
-                color=0xBEBEFE,
+                title="Nouveau retour",
+                description=f"{interaction.user} (<@{interaction.user.id}>) a soumis un nouveau retour :\n{feedback_form.answer}"
             )
         )
 
-
-async def setup(bot) -> None:
+async def setup(bot):
     await bot.add_cog(General(bot))

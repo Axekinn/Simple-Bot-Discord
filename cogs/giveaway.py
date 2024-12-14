@@ -1,48 +1,125 @@
-import discord
-from discord.ext import commands, tasks
-from discord.ext.commands import Context
 import asyncio
-import random
+import json
 import os
+import datetime
+import random
+import discord
+from discord.ext import commands
+from discord.ext.commands import Context
 
-class Giveaway(commands.Cog, name="giveaway"):
-    def __init__(self, bot) -> None:
+class Giveaway(commands.Cog):
+    def __init__(self, bot):
         self.bot = bot
-        self.giveaways = []
+        self.giveaways = self.load_giveaways()
+        self.schedule_giveaways()  # Planifier les giveaways au démarrage
 
-    def parse_duration(self, duration_str):
-        units = {'s': 1, 'm': 60, 'h': 3600, 'w': 604800}
+    def load_giveaways(self):
+        if os.path.exists("giveaways.json"):
+            try:
+                with open("giveaways.json", "r") as f:
+                    data = json.load(f)
+                print("Giveaways chargés avec succès.")
+                return data
+            except json.JSONDecodeError:
+                print("Erreur : giveaways.json n'est pas un JSON valide. Initialisation des giveaways vides.")
+                return []
+            except Exception as e:
+                print(f"Erreur inattendue lors du chargement des giveaways : {e}")
+                return []
+        else:
+            print("giveaways.json non trouvé. Initialisation des giveaways vides.")
+            return []
+
+    def save_giveaways(self):
         try:
-            if duration_str.isdigit():
-                return int(duration_str)
-            else:
-                unit = duration_str[-1]
-                if unit in units:
-                    amount = int(duration_str[:-1])
-                    return amount * units[unit]
-        except ValueError:
-            pass
-        return None
+            with open("giveaways.json", "w") as f:
+                json.dump(self.giveaways, f, indent=4)
+            print("Giveaways sauvegardés avec succès.")
+        except Exception as e:
+            print(f"Erreur lors de la sauvegarde des giveaways: {e}")
 
-    @commands.command(name="giveaway", description="Start a giveaway")
-    async def start_giveaway(self, ctx: Context, duration: str, winners: int, *, prize: str) -> None:
-        """
-        Start a giveaway.
-        :param ctx: The context of the command.
-        :param duration: The duration of the giveaway.
-        :param winners: The number of winners.
-        :param prize: The prize of the giveaway.
-        """
-        duration_in_seconds = self.parse_duration(duration)
-        if duration_in_seconds is None:
-            await ctx.send("Invalid duration format. Please use formats like '10s', '5m', or '2h'.")
+    def schedule_giveaways(self):
+        current_time = datetime.datetime.utcnow().timestamp()
+        for giveaway in self.giveaways:
+            end_time = giveaway["end_time"]
+            remaining_time = end_time - current_time
+            if remaining_time > 0:
+                # Planifier la fin du giveaway après le temps restant
+                asyncio.create_task(self.end_giveaway_after_delay(giveaway["message_id"], remaining_time))
+            else:
+                # Si le temps est écoulé, terminer le giveaway immédiatement
+                asyncio.create_task(self.end_giveaway(giveaway["message_id"]))
+
+    async def end_giveaway_after_delay(self, message_id: int, delay: float):
+        await asyncio.sleep(delay)
+        await self.end_giveaway(message_id)
+
+    async def end_giveaway(self, message_id: int) -> None:
+        giveaway = next((g for g in self.giveaways if g["message_id"] == message_id), None)
+        if not giveaway:
             return
 
-        end_timestamp = int(discord.utils.utcnow().timestamp() + duration_in_seconds)
+        # Retirer le giveaway de la liste et sauvegarder
+        self.giveaways = [g for g in self.giveaways if g["message_id"] != message_id]
+        self.save_giveaways()
 
+        channel = self.bot.get_channel(giveaway["channel_id"])
+        if channel is None:
+            return
+
+        try:
+            message = await channel.fetch_message(giveaway["message_id"])
+        except discord.NotFound:
+            return
+
+        users = [user async for user in message.reactions[0].users() if not user.bot]
+
+        if len(users) == 0:
+            await channel.send("Personne n'a participé au giveaway.")
+            return
+
+        winners = random.sample(users, min(giveaway["winners"], len(users)))
+        winner_mentions = ", ".join([winner.mention for winner in winners])
+        await channel.send(f"Félicitations {winner_mentions} ! Vous avez gagné **{giveaway['prize']}** !")
+
+    def parse_duration(self, duration: str) -> int:
+        unit = duration[-1]
+        if unit not in "smhd":
+            raise ValueError("Unité de durée invalide. Utilisez 's' pour secondes, 'm' pour minutes, 'h' pour heures ou 'd' pour jours.")
+        try:
+            value = int(duration[:-1])
+        except ValueError:
+            raise ValueError("Valeur de durée invalide.")
+
+        if unit == "s":
+            return value
+        elif unit == "m":
+            return value * 60
+        elif unit == "h":
+            return value * 3600
+        elif unit == "d":
+            return value * 86400
+
+    @commands.command(name="start_giveaway", description="Démarrer un giveaway")
+    async def start_giveaway(self, ctx: Context, duration: str, winners: int, *, prize: str) -> None:
+        """
+        Démarrer un giveaway.
+        :param ctx: Le contexte de la commande.
+        :param duration: La durée du giveaway (par ex., '10s', '5m', '1h', '2d').
+        :param winners: Le nombre de gagnants.
+        :param prize: Le prix du giveaway.
+        """
+        try:
+            duration_seconds = self.parse_duration(duration)
+        except ValueError as e:
+            await ctx.send(str(e))
+            return
+
+        end_time = (datetime.datetime.utcnow() + datetime.timedelta(seconds=duration_seconds)).timestamp()
+        end_timestamp = int(end_time)
         embed = discord.Embed(
-            title="🎉 Giveaway! 🎉",
-            description=f"Prize: {prize}\nReact with 🎉 to enter!\nEnds at: <t:{end_timestamp}:f>\nWinners: {winners}",
+            title="🎉 Giveaway ! 🎉",
+            description=f"Prix : {prize}\nRéagissez avec 🎉 pour participer !\nSe termine le : <t:{end_timestamp}:f>\nNombre de gagnants : {winners}",
             color=0xBEBEFE,
         )
         message = await ctx.send(embed=embed)
@@ -53,70 +130,35 @@ class Giveaway(commands.Cog, name="giveaway"):
             "channel_id": ctx.channel.id,
             "prize": prize,
             "winners": winners,
-            "end_time": end_timestamp
+            "end_time": end_time
         })
+        self.save_giveaways()
 
-        await asyncio.sleep(duration_in_seconds)
-        await self.end_giveaway(message.id)
+        # Planifier la fin du giveaway sans bloquer
+        asyncio.create_task(self.end_giveaway_after_delay(message.id, duration_seconds))
 
-    async def end_giveaway(self, message_id: int) -> None:
-        giveaway = next((g for g in self.giveaways if g["message_id"] == message_id), None)
-        if not giveaway:
-            return
-
-        channel = self.bot.get_channel(giveaway["channel_id"])
-        message = await channel.fetch_message(giveaway["message_id"])
-        users = []
-        async for user in message.reactions[0].users():
-            if not user.bot:
-                users.append(user)
-
-        if len(users) == 0:
-            await channel.send("No one entered the giveaway.")
-            return
-
-        winners = random.sample(users, min(giveaway["winners"], len(users)))
-        winner_mentions = ", ".join([winner.mention for winner in winners])
-        await channel.send(f"Congratulations {winner_mentions}! You won the giveaway for **{giveaway['prize']}**!")
-
-    @commands.command(name="reroll", description="Reroll a giveaway")
+    @commands.command(name="reroll", description="Relancer un giveaway")
     async def reroll_giveaway(self, ctx: Context, message_id: int) -> None:
         """
-        Reroll a giveaway.
-        :param ctx: The context of the command.
-        :param message_id: The ID of the giveaway message.
+        Relancer un giveaway.
+        :param ctx: Le contexte de la commande.
+        :param message_id: L'ID du message du giveaway.
         """
-        giveaway = next((g for g in self.giveaways if g["message_id"] == message_id), None)
-        if not giveaway:
-            await ctx.send("Giveaway not found.")
+        channel = ctx.channel
+        try:
+            message = await channel.fetch_message(message_id)
+        except discord.NotFound:
+            await ctx.send("Message non trouvé.")
             return
 
-        channel = self.bot.get_channel(giveaway["channel_id"])
-        message = await channel.fetch_message(giveaway["message_id"])
-        users = await message.reactions[0].users().flatten()
-        users = [user for user in users if not user.bot]
+        users = [user async for user in message.reactions[0].users() if not user.bot]
 
         if len(users) == 0:
-            await ctx.send("No one entered the giveaway.")
+            await ctx.send("Personne n'a participé au giveaway.")
             return
 
-        winners = random.sample(users, min(giveaway["winners"], len(users)))
-        winner_mentions = ", ".join([winner.mention for winner in winners])
-
-        embed = discord.Embed(
-            title="🎉 Giveaway Rerolled! 🎉",
-            description=f"Prize: {giveaway['prize']}\nNew Winners: {winner_mentions}",
-            color=0xBEBEFE,
-        )
-        await channel.send(embed=embed)
-
-    async def load_cogs(self) -> None:
-        """
-        The code in this function is executed whenever the bot will start.
-        """
-        for filename in os.listdir('./cogs'):
-            if filename.endswith('.py'):
-                await self.load_extension(f'cogs.{filename[:-3]}')
+        winner = random.choice(users)
+        await channel.send(f"Félicitations {winner.mention} ! Vous avez remporté le reroll du giveaway !")
 
 async def setup(bot):
     await bot.add_cog(Giveaway(bot))

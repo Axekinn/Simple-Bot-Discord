@@ -1,9 +1,9 @@
 """
-Copyright © Krypton 2019-Present - https://github.com/kkrypt0nn (https://krypton.ninja)
+Copyright © Krypton 2019-Présent - https://github.com/kkrypt0nn (https://krypton.ninja)
 Description:
-🐍 A simple template to start to code your own and personalized Discord bot in Python
+🐍 Un modèle simple pour commencer à coder votre propre bot Discord personnalisé en Python
 
-Version: 6.2.0
+Version : 6.2.0
 """
 
 import random
@@ -14,150 +14,123 @@ from discord.ext import commands
 from discord.ext.commands import Context
 
 
-class Choice(discord.ui.View):
+class Choix(discord.ui.View):
     def __init__(self) -> None:
         super().__init__()
-        self.value = None
+        self.valeur = None
 
-    @discord.ui.button(label="Heads", style=discord.ButtonStyle.blurple)
-    async def confirm(
+    @discord.ui.button(label="Pile", style=discord.ButtonStyle.blurple)
+    async def confirmer(
         self, button: discord.ui.Button, interaction: discord.Interaction
     ) -> None:
-        self.value = "heads"
+        self.valeur = "pile"
         self.stop()
 
-    @discord.ui.button(label="Tails", style=discord.ButtonStyle.blurple)
-    async def cancel(
+    @discord.ui.button(label="Face", style=discord.ButtonStyle.blurple)
+    async def annuler(
         self, button: discord.ui.Button, interaction: discord.Interaction
     ) -> None:
-        self.value = "tails"
+        self.valeur = "face"
         self.stop()
 
 
-class RockPaperScissors(discord.ui.Select):
+class PierrePapierCiseaux(discord.ui.Select):
     def __init__(self) -> None:
         options = [
             discord.SelectOption(
-                label="Scissors", description="You choose scissors.", emoji="✂"
+                label="Ciseaux", description="Vous choisissez les ciseaux.", emoji="✂"
             ),
             discord.SelectOption(
-                label="Rock", description="You choose rock.", emoji="🪨"
+                label="Pierre", description="Vous choisissez la pierre.", emoji="🪨"
             ),
             discord.SelectOption(
-                label="Paper", description="You choose paper.", emoji="🧻"
+                label="Papier", description="Vous choisissez le papier.", emoji="🧻"
             ),
         ]
         super().__init__(
-            placeholder="Choose...",
+            placeholder="Choisissez...",
             min_values=1,
             max_values=1,
             options=options,
         )
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        choices = {
-            "rock": 0,
-            "paper": 1,
-            "scissors": 2,
+        choix = {
+            "pierre": 0,
+            "papier": 1,
+            "ciseaux": 2,
         }
-        user_choice = self.values[0].lower()
-        user_choice_index = choices[user_choice]
+        choix_utilisateur = self.values[0].lower()
+        index_choix_utilisateur = choix[choix_utilisateur]
 
-        bot_choice = random.choice(list(choices.keys()))
-        bot_choice_index = choices[bot_choice]
+        choix_bot = random.choice(list(choix.keys()))
+        index_choix_bot = choix[choix_bot]
 
-        result_embed = discord.Embed(color=0xBEBEFE)
-        result_embed.set_author(
+        embed_resultat = discord.Embed(color=0xBEBEFE)
+        embed_resultat.set_author(
             name=interaction.user.name, icon_url=interaction.user.display_avatar.url
         )
 
-        winner = (3 + user_choice_index - bot_choice_index) % 3
-        if winner == 0:
-            result_embed.description = f"**That's a draw!**\nYou've chosen {user_choice} and I've chosen {bot_choice}."
-            result_embed.colour = 0xF59E42
-        elif winner == 1:
-            result_embed.description = f"**You won!**\nYou've chosen {user_choice} and I've chosen {bot_choice}."
-            result_embed.colour = 0x57F287
+        gagnant = (3 + index_choix_utilisateur - index_choix_bot) % 3
+        if gagnant == 0:
+            embed_resultat.description = (
+                f"**C'est une égalité !**\nVous avez choisi {choix_utilisateur} "
+                f"et j'ai choisi {choix_bot}."
+            )
+            embed_resultat.colour = 0xF59E42
+        elif gagnant == 1:
+            embed_resultat.description = (
+                f"**Vous avez gagné !**\nVous avez choisi {choix_utilisateur} "
+                f"et j'ai choisi {choix_bot}."
+            )
+            embed_resultat.colour = 0x9CDE7C
         else:
-            result_embed.description = f"**You lost!**\nYou've chosen {user_choice} and I've chosen {bot_choice}."
-            result_embed.colour = 0xE02B2B
+            embed_resultat.description = (
+                f"**Vous avez perdu !**\nVous avez choisi {choix_utilisateur} "
+                f"et j'ai choisi {choix_bot}."
+            )
+            embed_resultat.colour = 0xE02B2B
 
-        await interaction.response.edit_message(
-            embed=result_embed, content=None, view=None
-        )
-
-
-class RockPaperScissorsView(discord.ui.View):
-    def __init__(self) -> None:
-        super().__init__()
-        self.add_item(RockPaperScissors())
+        await interaction.response.edit_message(embed=embed_resultat, view=None)
 
 
 class Fun(commands.Cog, name="fun"):
     def __init__(self, bot) -> None:
         self.bot = bot
 
-    @commands.hybrid_command(name="randomfact", description="Get a random fact.")
-    async def randomfact(self, context: Context) -> None:
-        """
-        Get a random fact.
-
-        :param context: The hybrid command context.
-        """
-        # This will prevent your bot from stopping everything when doing a web request - see: https://discordpy.readthedocs.io/en/stable/faq.html#how-do-i-make-a-web-request
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                "https://uselessfacts.jsph.pl/random.json?language=en"
-            ) as request:
-                if request.status == 200:
-                    data = await request.json()
-                    embed = discord.Embed(description=data["text"], color=0xD75BF4)
-                else:
-                    embed = discord.Embed(
-                        title="Error!",
-                        description="There is something wrong with the API, please try again later",
-                        color=0xE02B2B,
-                    )
-                await context.send(embed=embed)
-
     @commands.hybrid_command(
-        name="coinflip", description="Make a coin flip, but give your bet before."
+        name="pileouface",
+        description="Lancer une pièce.",
     )
     async def coinflip(self, context: Context) -> None:
         """
-        Make a coin flip, but give your bet before.
-
-        :param context: The hybrid command context.
+        Lancer une pièce pour obtenir pile ou face.
         """
-        buttons = Choice()
-        embed = discord.Embed(description="What is your bet?", color=0xBEBEFE)
-        message = await context.send(embed=embed, view=buttons)
-        await buttons.wait()  # We wait for the user to click a button.
-        result = random.choice(["heads", "tails"])
-        if buttons.value == result:
-            embed = discord.Embed(
-                description=f"Correct! You guessed `{buttons.value}` and I flipped the coin to `{result}`.",
-                color=0xBEBEFE,
-            )
+        view = Choix()
+        await context.send("Choisissez pile ou face :", view=view)
+        await view.wait()
+
+        choix_utilisateur = view.valeur
+        choix_bot = random.choice(["pile", "face"])
+
+        if choix_utilisateur == choix_bot:
+            await context.send(f"C'est {choix_bot} ! Vous avez gagné !")
         else:
-            embed = discord.Embed(
-                description=f"Woops! You guessed `{buttons.value}` and I flipped the coin to `{result}`, better luck next time!",
-                color=0xE02B2B,
-            )
-        await message.edit(embed=embed, view=None, content=None)
+            await context.send(f"C'est {choix_bot} ! Vous avez perdu !")
 
     @commands.hybrid_command(
-        name="rps", description="Play the rock paper scissors game against the bot."
+        name="pierrepapierciseaux",
+        description="Jouez à Pierre-Papier-Ciseaux.",
     )
-    async def rock_paper_scissors(self, context: Context) -> None:
+    async def play_rps(self, context: Context) -> None:
         """
-        Play the rock paper scissors game against the bot.
-
-        :param context: The hybrid command context.
+        Jouez à Pierre-Papier-Ciseaux contre le bot.
         """
-        view = RockPaperScissorsView()
-        await context.send("Please make your choice", view=view)
+        view = discord.ui.View()
+        select = PierrePapierCiseaux()
+        view.add_item(select)
+        await context.send("Choisissez votre option :", view=view)
 
 
-async def setup(bot) -> None:
+async def setup(bot):
     await bot.add_cog(Fun(bot))
