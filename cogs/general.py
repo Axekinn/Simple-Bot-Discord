@@ -90,14 +90,23 @@ class General(commands.Cog, name="general"):
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @commands.hybrid_command(name="help")
+    @commands.hybrid_command(name="help", description="Affiche la liste des commandes disponibles.")
     async def help(self, ctx):
-        embed = discord.Embed(title="Aide", description="Liste des commandes", color=0x00ff00)
+        """
+        Affiche la liste des commandes disponibles.
+
+        :param ctx: Le contexte de la commande.
+        """
+        embed = discord.Embed(title="Aide", description="Voici la liste des commandes disponibles :", color=0x00ff00)
         for cog_name, cog in self.bot.cogs.items():
             if cog is not None:
-                commands = cog.get_commands()
-                command_list = "\n".join([command.name for command in commands])
-                embed.add_field(name=cog_name, value=command_list, inline=False)
+                commands_list = ""
+                for command in cog.get_commands():
+                    command_name = command.name
+                    command_description = command.description if command.description else "Pas de description."
+                    commands_list += f"**/{command_name}** - {command_description}\n"
+                if commands_list:
+                    embed.add_field(name=cog_name.capitalize(), value=commands_list, inline=False)
         await ctx.send(embed=embed)
 
     @commands.hybrid_command(name="botinfo", description="Obtenir des informations utiles (ou non) sur le bot.")

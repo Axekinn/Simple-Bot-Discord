@@ -114,30 +114,54 @@ class Moderation(commands.Cog, name="modération"):
         reason="La raison pour laquelle l'utilisateur doit être banni.",
     )
     async def ban(
-        self, context: Context, user: discord.User, *, reason: str = "Non spécifiée"
+        self, ctx: commands.Context, user: discord.User, *, reason: str = "Non spécifiée"
     ) -> None:
         """
         Bannit un utilisateur du serveur.
 
-        :param context: Le contexte de la commande hybride.
+        :param ctx: Le contexte de la commande hybride.
         :param user: L'utilisateur qui doit être banni du serveur.
         :param reason: La raison du bannissement. Par défaut : "Non spécifiée".
         """
-        member = context.guild.get_member(user.id) or await context.guild.fetch_member(
-            user.id
-        )
-        try:
-            if member.guild_permissions.administrator:
-                pass
-            else:
-                pass
-        except:
+        member = ctx.guild.get_member(user.id) or await ctx.guild.fetch_member(user.id)
+
+        if member.guild_permissions.administrator:
             embed = discord.Embed(
-                title="Erreur !",
-                description="Une erreur s'est produite lors de la tentative de bannissement de l'utilisateur. Assurez-vous que mon rôle est au-dessus du rôle de l'utilisateur que vous voulez bannir.",
+                description="⚠️ Vous ne pouvez pas bannir un administrateur.",
                 color=0xE02B2B,
             )
-            await context.send(embed=embed)
+            await ctx.send(embed=embed)
+            return
+
+        try:
+            await member.ban(reason=reason)
+            embed = discord.Embed(
+                description=f"✅ **{member}** a été banni par **{ctx.author}** !",
+                color=0xBEBEFE,
+            )
+            embed.add_field(name="Raison :", value=reason)
+            await ctx.send(embed=embed)
+            try:
+                await member.send(
+                    f"Vous avez été banni de **{ctx.guild.name}** par **{ctx.author}**.\nRaison : {reason}"
+                )
+            except discord.Forbidden:
+                # L'utilisateur a peut-être désactivé les messages privés
+                pass
+        except discord.Forbidden:
+            embed = discord.Embed(
+                title="Erreur",
+                description="Je n'ai pas les permissions nécessaires pour bannir cet utilisateur.",
+                color=0xE02B2B,
+            )
+            await ctx.send(embed=embed)
+        except Exception as e:
+            embed = discord.Embed(
+                title="Erreur",
+                description=f"Une erreur est survenue : {e}",
+                color=0xE02B2B,
+            )
+            await ctx.send(embed=embed)
 
     @commands.hybrid_group(
         name="warning",
