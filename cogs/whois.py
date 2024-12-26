@@ -29,7 +29,7 @@ class Whois(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='whois',description="Affiche la liste des commandes disponibles.")
+    @commands.command(name='whois',description="Donne des informations sur un utiliateur.")
     async def whois(self, ctx, member: discord.Member = None):
         if member is None:
             member = ctx.author

@@ -18,7 +18,7 @@ import discord
 from discord.ext import commands, tasks
 from discord.ext.commands import Context
 from dotenv import load_dotenv
-
+     
 from database import DatabaseManager
 
 if not os.path.isfile(f"{os.path.realpath(os.path.dirname(__file__))}/config.json"):
@@ -294,16 +294,17 @@ bot = DiscordBot()
 
 # Liste des cogs à charger
 initial_extensions = [
-    "xp",         # Assurez-vous que vos cogs sont dans le même répertoire ou ajustez le chemin
-    "giveaway",
-    "moderation",
-    "fun",
-    "general",
-    "owner",
-    "template",
-    "vote",
-    "whois",
-    "command_builder",
+    "cogs.xp",         # Assurez-vous que vos cogs sont dans le même répertoire ou ajustez le chemin
+    "cogs.giveaway",
+    "cogs.moderation",
+    "cogs.fun",
+    "cogs.general",
+    "cogs.owner",
+    "cogs.template",
+    "cogs.vote",
+    "cogs.whois",
+    "cogs.command_builder",
+    "cogs.ryu_logfile_reader",
     # Ajoutez d'autres cogs ici
 ]
 

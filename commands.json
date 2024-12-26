@@ -1,0 +1,4 @@
+{
+    "logss": "-> N'ouvrez PAS Ryujinx \u00e0 nouveau, sinon le fichier journal sera recr\u00e9\u00e9.\n-> Naviguez jusqu'au dossier \u00ab Logs \u00bb o\u00f9 se trouve Ryujinx.exe.\n-> Envoyez le dernier fichier de log, le fichier entier, pas seulement le contenu \u00e0 l'int\u00e9rieur.\n-> Si vous avez ouvert Ryujinx apr\u00e8s un crash, partagez le log juste avant le dernier log.",
+    "ud": "Ce petit logiciel va r\u00e9aliser un diagnostic de votre pc afin d'identifier ce qui ne va pas :\n1. T\u00e9l\u00e9charger l'application : <https://userdiag.com/>\n2. Fermer le plus grand nombre d'applications ouvertes\n3. Lancer l'application puis le **__diagnostic rapide__**\n4. **Lorsque le test est termin\u00e9, __envoyer le lien dans ce salon__ (CTRL + V)**"
+}
