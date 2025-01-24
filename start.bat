@@ -2,7 +2,7 @@
 REM Script pour lancer Etoile D'ébène
 
 REM Chemin vers l'environnement virtuel 
-set VENV_PATH=C:\Users\Admin\Documents\GitHub\Bot-log-discord-python\env\Scripts
+set VENV_PATH=C:\Users\Admin\Documents\GitHub\Simple-Bot-Discord\.venv\Scripts
 
 REM Chemin vers le fichier Python à exécuter
 set PYTHON_FILE=bot.py
