@@ -10,6 +10,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
+from typing import Optional
 
 
 class Owner(commands.Cog, name="propriétaire"):
@@ -203,17 +204,26 @@ class Owner(commands.Cog, name="propriétaire"):
         name="embed",
         description="Le bot dira tout ce que vous voulez, mais dans un embed.",
     )
-    @app_commands.describe(message="Le message que le bot devrait répéter")
+    @app_commands.describe(
+        message="Le message que le bot devrait répéter",
+        attachment="Les pièces jointes que le bot devrait envoyer"
+    )
     @commands.is_owner()
-    async def embed(self, context: Context, *, message: str) -> None:
+    async def embed(self, context: Context, message: str, attachment: Optional[discord.Attachment] = None) -> None:
         """
         Le bot dira tout ce que vous voulez, mais en utilisant un embed.
 
         :param context: Le contexte de la commande hybride.
         :param message: Le message que le bot devrait répéter.
+        :param attachment: Les pièces jointes que le bot devrait envoyer.
         """
         embed = discord.Embed(description=message, color=0xBEBEFE)
-        await context.send(embed=embed)
+        if attachment:
+            file = await attachment.to_file()
+            await context.send(embed=embed, file=file)
+        else:
+            await context.send(embed=embed)
+        await context.message.delete()
 
 
 async def setup(bot) -> None:
