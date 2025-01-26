@@ -199,6 +199,7 @@ class Owner(commands.Cog, name="propriétaire"):
         :param message: Le message que le bot devrait répéter.
         """
         await context.send(message)
+        await context.message.delete()
 
     @commands.hybrid_command(
         name="embed",
