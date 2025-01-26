@@ -219,6 +219,12 @@ class Owner(commands.Cog, name="propriétaire"):
         """
         embed = discord.Embed(description=message, color=0xBEBEFE)
         if attachment:
+            if attachment.size > 8 * 1024 * 1024:  # 8 MB
+                embed = discord.Embed(
+                    description="La taille de la pièce jointe doit être inférieure à 8 MB.", color=0xE02B2B
+                )
+                await context.send(embed=embed)
+                return
             file = await attachment.to_file()
             await context.send(embed=embed, file=file)
         else:
