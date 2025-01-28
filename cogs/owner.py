@@ -210,7 +210,7 @@ class Owner(commands.Cog, name="propriétaire"):
         attachment="Les pièces jointes que le bot devrait envoyer"
     )
     @commands.is_owner()
-    async def embed(self, context: Context, message: str, attachment: Optional[discord.Attachment] = None) -> None:
+    async def embed(self, context: Context, *, message: str, attachment: Optional[discord.Attachment] = None) -> None:
         """
         Le bot dira tout ce que vous voulez, mais en utilisant un embed.
 
