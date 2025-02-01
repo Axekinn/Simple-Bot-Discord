@@ -15,22 +15,22 @@ from discord.ext import commands
 from discord.ext.commands import Context
 
 
-class Moderation(commands.Cog, name="modération"):
+class Moderation(commands.Cog, name="moderation"):
     def __init__(self, bot) -> None:
         self.bot = bot
 
     @commands.hybrid_command(
         name="kick",
-        description="Expulse un utilisateur du serveur.",
+        description="Expels a user from the server.",
     )
     @commands.has_permissions(kick_members=True)
     @commands.bot_has_permissions(kick_members=True)
     @app_commands.describe(
-        user="L'utilisateur qui doit être expulsé.",
-        reason="La raison pour laquelle l'utilisateur doit être expulsé.",
+        user="The user to be expelled.",
+        reason="The reason why the user must be evicted.",
     )
     async def kick(
-        self, context: Context, user: discord.User, *, reason: str = "Non spécifiée"
+        self, context: Context, user: discord.User, *, reason: str = "Not specified"
     ) -> None:
         """
         Expulse un utilisateur du serveur.
@@ -44,21 +44,21 @@ class Moderation(commands.Cog, name="modération"):
         )
         if member.guild_permissions.administrator:
             embed = discord.Embed(
-                description="L'utilisateur a des permissions d'administrateur.",
+                description="The user has administrator permissions.",
                 color=0xE02B2B
             )
             await context.send(embed=embed)
         else:
             try:
                 embed = discord.Embed(
-                    description=f"**{member}** a été expulsé par **{context.author}** !",
+                    description=f"**{member}** was expelled by **{context.author}** !",
                     color=0xBEBEFE,
                 )
-                embed.add_field(name="Raison :", value=reason)
+                embed.add_field(name="Reason :", value=reason)
                 await context.send(embed=embed)
                 try:
                     await member.send(
-                        f"Vous avez été expulsé de **{context.guild.name}** par **{context.author}**.\nRaison : {reason}"
+                        f"You have been expelled from **{context.guild.name}** by **{context.author}**.\nReason : {reason}"
                     )
                 except:
                     pass
@@ -68,13 +68,13 @@ class Moderation(commands.Cog, name="modération"):
 
     @commands.hybrid_command(
         name="nick",
-        description="Change le surnom d'un utilisateur sur le serveur.",
+        description="Changes a user's nickname on the server.",
     )
     @commands.has_permissions(manage_nicknames=True)
     @commands.bot_has_permissions(manage_nicknames=True)
     @app_commands.describe(
-        user="L'utilisateur qui devrait avoir un nouveau surnom.",
-        nickname="Le nouveau surnom qui doit être défini.",
+        user="The user who should have a new nickname.",
+        nickname="The new nickname to be defined.",
     )
     async def nick(
         self, context: Context, user: discord.User, *, nickname: str = None
@@ -92,29 +92,29 @@ class Moderation(commands.Cog, name="modération"):
         try:
             await member.edit(nick=nickname)
             embed = discord.Embed(
-                description=f"Le nouveau surnom de **{member}** est **{nickname}** !",
+                description=f"The new nickname for **{member}** is **{nickname}** !",
                 color=0xBEBEFE,
             )
             await context.send(embed=embed)
         except:
             embed = discord.Embed(
-                description="Une erreur s'est produite lors de la tentative de changement du surnom de l'utilisateur. Assurez-vous que mon rôle est au-dessus du rôle de l'utilisateur dont vous voulez changer le surnom.",
+                description="An error occurred when attempting to change the user's nickname. Make sure my role is above the role of the user whose nickname you want to change.",
                 color=0xE02B2B,
             )
             await context.send(embed=embed)
 
     @commands.hybrid_command(
         name="ban",
-        description="Bannit un utilisateur du serveur.",
+        description="Bans a user from the server.",
     )
     @commands.has_permissions(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
     @app_commands.describe(
-        user="L'utilisateur qui doit être banni.",
-        reason="La raison pour laquelle l'utilisateur doit être banni.",
+        user="The user to be banned.",
+        reason="The reason why the user should be banned.",
     )
     async def ban(
-        self, ctx: commands.Context, user: discord.User, *, reason: str = "Non spécifiée"
+        self, ctx: commands.Context, user: discord.User, *, reason: str = "Not specified"
     ) -> None:
         """
         Bannit un utilisateur du serveur.
@@ -127,7 +127,7 @@ class Moderation(commands.Cog, name="modération"):
 
         if member.guild_permissions.administrator:
             embed = discord.Embed(
-                description="⚠️ Vous ne pouvez pas bannir un administrateur.",
+                description="⚠️ You cannot ban an administrator.",
                 color=0xE02B2B,
             )
             await ctx.send(embed=embed)
@@ -136,36 +136,36 @@ class Moderation(commands.Cog, name="modération"):
         try:
             await member.ban(reason=reason)
             embed = discord.Embed(
-                description=f"✅ **{member}** a été banni par **{ctx.author}** !",
+                description=f"✅ **{member}** has been banned by **{ctx.author}** !",
                 color=0xBEBEFE,
             )
-            embed.add_field(name="Raison :", value=reason)
+            embed.add_field(name="Reason :", value=reason)
             await ctx.send(embed=embed)
             try:
                 await member.send(
-                    f"Vous avez été banni de **{ctx.guild.name}** par **{ctx.author}**.\nRaison : {reason}"
+                    f"You have been banned from **{ctx.guild.name}** by **{ctx.author}**.\nReason : {reason}"
                 )
             except discord.Forbidden:
                 # L'utilisateur a peut-être désactivé les messages privés
                 pass
         except discord.Forbidden:
             embed = discord.Embed(
-                title="Erreur",
-                description="Je n'ai pas les permissions nécessaires pour bannir cet utilisateur.",
+                title="Error",
+                description="I don't have the necessary permissions to ban this user.",
                 color=0xE02B2B,
             )
             await ctx.send(embed=embed)
         except Exception as e:
             embed = discord.Embed(
-                title="Erreur",
-                description=f"Une erreur est survenue : {e}",
+                title="Error",
+                description=f"An error has occurred : {e}",
                 color=0xE02B2B,
             )
             await ctx.send(embed=embed)
 
     @commands.hybrid_group(
         name="warning",
-        description="Gère les avertissements d'un utilisateur sur le serveur.",
+        description="Manages user warnings on the server.",
     )
     @commands.has_permissions(manage_messages=True)
     async def warning(self, context: Context) -> None:
@@ -176,22 +176,22 @@ class Moderation(commands.Cog, name="modération"):
         """
         if context.invoked_subcommand is None:
             embed = discord.Embed(
-                description="Veuillez spécifier une sous-commande.\n\n**Sous-commandes :**\n`add` - Ajoute un avertissement à un utilisateur.\n`remove` - Supprime un avertissement d'un utilisateur.\n`list` - Liste tous les avertissements d'un utilisateur.",
+                description="Please specify a sub-order.\n\n**Sub-orders :**\n`add` - Adds a warning to a user.\n`remove` - Removes a user warning.\n`list` - Lists all warnings for a user.",
                 color=0xE02B2B,
             )
             await context.send(embed=embed)
 
     @warning.command(
         name="add",
-        description="Ajoute un avertissement à un utilisateur dans le serveur.",
+        description="Adds a warning to a user in the server.",
     )
     @commands.has_permissions(manage_messages=True)
     @app_commands.describe(
-        user="L'utilisateur qui doit être averti.",
-        reason="La raison pour laquelle l'utilisateur doit être averti.",
+        user="The user who needs to be warned.",
+        reason="The reason why the user must be warned.",
     )
     async def warning_add(
-        self, context: Context, user: discord.User, *, reason: str = "Non spécifiée"
+        self, context: Context, user: discord.User, *, reason: str = "Not specified"
     ) -> None:
         """
         Avertit un utilisateur dans ses messages privés.
@@ -207,28 +207,28 @@ class Moderation(commands.Cog, name="modération"):
             user.id, context.guild.id, context.author.id, reason
         )
         embed = discord.Embed(
-            description=f"**{member}** a été averti par **{context.author}** !\nTotal des avertissements pour cet utilisateur : {total}",
+            description=f"**{member}** has been notified by **{context.author}** !\nTotal warnings for this user : {total}",
             color=0xBEBEFE,
         )
-        embed.add_field(name="Raison :", value=reason)
+        embed.add_field(name="Reason :", value=reason)
         await context.send(embed=embed)
         try:
             await member.send(
-                f"Vous avez été averti par **{context.author}** dans **{context.guild.name}** !\nRaison : {reason}"
+                f"You have been notified by **{context.author}** in **{context.guild.name}** !\nReason : {reason}"
             )
         except:
             await context.send(
-                f"{member.mention}, vous avez été averti par **{context.author}** !\nRaison : {reason}"
+                f"{member.mention}, you have been notified by **{context.author}** !\nReason : {reason}"
             )
 
     @warning.command(
         name="remove",
-        description="Supprime un avertissement d'un utilisateur dans le serveur.",
+        description="Removes a user's warning from the server.",
     )
     @commands.has_permissions(manage_messages=True)
     @app_commands.describe(
-        user="L'utilisateur dont l'avertissement doit être supprimé.",
-        warn_id="L'ID de l'avertissement qui doit être supprimé.",
+        user="The user whose warning is to be removed.",
+        warn_id="The ID of the warning to be deleted.",
     )
     async def warning_remove(
         self, context: Context, user: discord.User, warn_id: int
@@ -245,17 +245,17 @@ class Moderation(commands.Cog, name="modération"):
         )
         total = await self.bot.database.remove_warn(warn_id, user.id, context.guild.id)
         embed = discord.Embed(
-            description=f"J'ai supprimé l'avertissement **#{warn_id}** de **{member}** !\nTotal des avertissements pour cet utilisateur : {total}",
+            description=f"I've removed the warning **#{warn_id}** of **{member}** !\nTotal warnings for this user : {total}",
             color=0xBEBEFE,
         )
         await context.send(embed=embed)
 
     @warning.command(
         name="list",
-        description="Affiche les avertissements d'un utilisateur dans le serveur.",
+        description="Displays a user's warnings in the server.",
     )
     @commands.has_guild_permissions(manage_messages=True)
-    @app_commands.describe(user="L'utilisateur dont vous voulez voir les avertissements.")
+    @app_commands.describe(user="The user whose warnings you want to see.")
     async def warning_list(self, context: Context, user: discord.User) -> None:
         """
         Affiche les avertissements d'un utilisateur dans le serveur.
@@ -264,10 +264,10 @@ class Moderation(commands.Cog, name="modération"):
         :param user: L'utilisateur dont vous voulez voir les avertissements.
         """
         warnings_list = await self.bot.database.get_warnings(user.id, context.guild.id)
-        embed = discord.Embed(title=f"Avertissements de {user}", color=0xBEBEFE)
+        embed = discord.Embed(title=f"Warnings from {user}", color=0xBEBEFE)
         description = ""
         if len(warnings_list) == 0:
-            description = "Cet utilisateur n'a aucun avertissement."
+            description = "This user has no warnings."
         else:
             for warning in warnings_list:
                 pass
@@ -276,11 +276,11 @@ class Moderation(commands.Cog, name="modération"):
 
     @commands.hybrid_command(
         name="purge",
-        description="Supprime un nombre de messages.",
+        description="Deletes a number of messages.",
     )
     @commands.has_guild_permissions(manage_messages=True)
     @commands.bot_has_permissions(manage_messages=True)
-    @app_commands.describe(amount="Le nombre de messages à supprimer.")
+    @app_commands.describe(amount="The number of messages to delete.")
     async def purge(self, context: Context, amount: int) -> None:
         """
         Supprime un nombre de messages.
@@ -289,27 +289,27 @@ class Moderation(commands.Cog, name="modération"):
         :param amount: Le nombre de messages à supprimer.
         """
         await context.send(
-            "Suppression des messages..."
+            "Deleting messages..."
         )
         purged_messages = await context.channel.purge(limit=amount + 1)
         embed = discord.Embed(
-            description=f"**{context.author}** a supprimé **{len(purged_messages)-1}** messages !",
+            description=f"**{context.author}** has deleted **{len(purged_messages)-1}** messages !",
             color=0xBEBEFE,
         )
         await context.channel.send(embed=embed)
 
     @commands.hybrid_command(
         name="hackban",
-        description="Bannit un utilisateur sans qu'il soit dans le serveur.",
+        description="Bans a user from the server.",
     )
     @commands.has_permissions(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
     @app_commands.describe(
-        user_id="L'ID de l'utilisateur qui doit être banni.",
-        reason="La raison pour laquelle l'utilisateur doit être banni.",
+        user_id="The ID of the user to be banned.",
+        reason="The reason why the user should be banned.",
     )
     async def hackban(
-        self, context: Context, user_id: str, *, reason: str = "Non spécifiée"
+        self, context: Context, user_id: str, *, reason: str = "Not specified"
     ) -> None:
         """
         Bannit un utilisateur sans qu'il soit dans le serveur.
@@ -324,25 +324,25 @@ class Moderation(commands.Cog, name="modération"):
                 int(user_id)
             )
             embed = discord.Embed(
-                description=f"**{user}** (ID : {user_id}) a été banni par **{context.author}** !",
+                description=f"**{user}** (ID : {user_id}) has been banned by **{context.author}** !",
                 color=0xBEBEFE,
             )
-            embed.add_field(name="Raison :", value=reason)
+            embed.add_field(name="Reason :", value=reason)
             await context.send(embed=embed)
         except Exception:
             embed = discord.Embed(
-                description="Une erreur s'est produite lors de la tentative de bannissement de l'utilisateur. Assurez-vous que l'ID est un ID existant appartenant à un utilisateur.",
+                description="An error occurred when attempting to ban the user. Make sure the ID is an existing user ID.",
                 color=0xE02B2B,
             )
             await context.send(embed=embed)
 
     @commands.hybrid_command(
         name="archive",
-        description="Archive les derniers messages dans un fichier texte avec une limite choisie.",
+        description="Archive the latest messages in a text file with a chosen limit.",
     )
     @commands.has_permissions(manage_messages=True)
     @app_commands.describe(
-        limit="La limite de messages à archiver.",
+        limit="The limit of messages to be archived.",
     )
     async def archive(self, context: Context, limit: int = 10) -> None:
         """
@@ -353,7 +353,7 @@ class Moderation(commands.Cog, name="modération"):
         log_file = f"{context.channel.id}.log"
         with open(log_file, "w", encoding="UTF-8") as f:
             f.write(
-                f'Messages archivés de : #{context.channel} ({context.channel.id}) dans le serveur "{context.guild}" ({context.guild.id}) le {datetime.now().strftime("%d.%m.%Y %H:%M:%S")}\n'
+                f'Archived messages from : #{context.channel} ({context.channel.id}) in the server "{context.guild}" ({context.guild.id}) le {datetime.now().strftime("%d.%m.%Y %H:%M:%S")}\n'
             )
             async for message in context.channel.history(
                 limit=limit, before=context.message

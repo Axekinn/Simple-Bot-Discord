@@ -203,11 +203,11 @@ class Owner(commands.Cog, name="propriétaire"):
 
     @commands.hybrid_command(
         name="embed",
-        description="Le bot dira tout ce que vous voulez, mais dans un embed.",
+        description="The bot will say anything you want, but in an embed.",
     )
     @app_commands.describe(
-        message="Le message que le bot devrait répéter",
-        attachment="Les pièces jointes que le bot devrait envoyer"
+        message="The message the bot should repeat",
+        attachment="Attachments the bot should send"
     )
     @commands.is_owner()
     async def embed(self, context: Context, *, message: str, attachment: Optional[discord.Attachment] = None) -> None:
@@ -222,7 +222,7 @@ class Owner(commands.Cog, name="propriétaire"):
         if attachment:
             if attachment.size > 8 * 1024 * 1024:  # 8 MB
                 embed = discord.Embed(
-                    description="La taille de la pièce jointe doit être inférieure à 8 MB.", color=0xE02B2B
+                    description="Attachment size must be less than 8 MB.", color=0xE02B2B
                 )
                 await context.send(embed=embed)
                 return

@@ -19,14 +19,14 @@ class Choix(discord.ui.View):
         super().__init__()
         self.valeur = None
 
-    @discord.ui.button(label="Pile", style=discord.ButtonStyle.blurple)
+    @discord.ui.button(label="Heads", style=discord.ButtonStyle.blurple)
     async def confirmer(
         self, button: discord.ui.Button, interaction: discord.Interaction
     ) -> None:
         self.valeur = "pile"
         self.stop()
 
-    @discord.ui.button(label="Face", style=discord.ButtonStyle.blurple)
+    @discord.ui.button(label="Tails", style=discord.ButtonStyle.blurple)
     async def annuler(
         self, button: discord.ui.Button, interaction: discord.Interaction
     ) -> None:
@@ -38,17 +38,17 @@ class PierrePapierCiseaux(discord.ui.Select):
     def __init__(self) -> None:
         options = [
             discord.SelectOption(
-                label="Ciseaux", description="Vous choisissez les ciseaux.", emoji="✂"
+                label="Scissors", description="You choose the scissors.", emoji="✂"
             ),
             discord.SelectOption(
-                label="Pierre", description="Vous choisissez la pierre.", emoji="🪨"
+                label="Rock", description="You choose the stone.", emoji="🪨"
             ),
             discord.SelectOption(
-                label="Papier", description="Vous choisissez le papier.", emoji="🧻"
+                label="Paper", description="You choose the paper.", emoji="🧻"
             ),
         ]
         super().__init__(
-            placeholder="Choisissez...",
+            placeholder="Choose...",
             min_values=1,
             max_values=1,
             options=options,
@@ -74,20 +74,20 @@ class PierrePapierCiseaux(discord.ui.Select):
         gagnant = (3 + index_choix_utilisateur - index_choix_bot) % 3
         if gagnant == 0:
             embed_resultat.description = (
-                f"**C'est une égalité !**\nVous avez choisi {choix_utilisateur} "
+                f"**It's a tie!**\nYou have chosen {choix_utilisateur} "
                 f"et j'ai choisi {choix_bot}."
             )
             embed_resultat.colour = 0xF59E42
         elif gagnant == 1:
             embed_resultat.description = (
-                f"**Vous avez gagné !**\nVous avez choisi {choix_utilisateur} "
-                f"et j'ai choisi {choix_bot}."
+                f"**You've won !**\nYou have chosen {choix_utilisateur} "
+                f"and I chose {choix_bot}."
             )
             embed_resultat.colour = 0x9CDE7C
         else:
             embed_resultat.description = (
-                f"**Vous avez perdu !**\nVous avez choisi {choix_utilisateur} "
-                f"et j'ai choisi {choix_bot}."
+                f"**You've lost !**\nYou have chosen {choix_utilisateur} "
+                f"and I chose {choix_bot}."
             )
             embed_resultat.colour = 0xE02B2B
 
@@ -99,38 +99,24 @@ class Fun(commands.Cog, name="fun"):
         self.bot = bot
 
     @commands.hybrid_command(
-        name="pileouface",
-        description="Lancer une pièce.",
+        name="coinfilp",
+        description="Flip a coin.",
     )
     async def coinflip(self, context: Context) -> None:
         """
         Lancer une pièce pour obtenir pile ou face.
         """
         view = Choix()
-        await context.send("Choisissez pile ou face :", view=view)
+        await context.send("Flip a coin :", view=view)
         await view.wait()
 
         choix_utilisateur = view.valeur
         choix_bot = random.choice(["pile", "face"])
 
         if choix_utilisateur == choix_bot:
-            await context.send(f"C'est {choix_bot} ! Vous avez gagné !")
+            await context.send(f"Its {choix_bot} ! You've won !")
         else:
-            await context.send(f"C'est {choix_bot} ! Vous avez perdu !")
-
-    @commands.hybrid_command(
-        name="pierrepapierciseaux",
-        description="Jouez à Pierre-Papier-Ciseaux.",
-    )
-    async def play_rps(self, context: Context) -> None:
-        """
-        Jouez à Pierre-Papier-Ciseaux contre le bot.
-        """
-        view = discord.ui.View()
-        select = PierrePapierCiseaux()
-        view.add_item(select)
-        await context.send("Choisissez votre option :", view=view)
-
+            await context.send(f"Its {choix_bot} ! You've lost !")
 
 async def setup(bot):
     await bot.add_cog(Fun(bot))

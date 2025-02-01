@@ -63,14 +63,6 @@ intents = discord.Intents.default()
 intents.message_content = True  # Enable message content intent
 intents.members = True  # Activez les intents nécessaires
 
-"""
-Uncomment this if you want to use prefix (normal) commands.
-It is recommended to use slash commands and therefore not use prefix commands.
-
-If you want to use prefix commands, make sure to also enable the intent below in the Discord developer portal.
-"""
-# intents.message_content = True
-
 # Setup both of the loggers
 
 

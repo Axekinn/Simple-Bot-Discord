@@ -24,22 +24,22 @@ class Vote(commands.Cog):
         elif value in false_values:
             return False
         else:
-            raise commands.BadArgument("Valeur invalide. Utilisez oui/non, true/false, 1/0")
+            raise commands.BadArgument("Invalid value. Use yes/no, true/false, 1/0")
 
-    @app_commands.command(name="vote_create", description="Crée un vote")
-    @app_commands.describe(anonyme="Vote anonyme ?", thread="Créer un thread associé ?", proposition="Proposition de vote")
+    @app_commands.command(name="vote_create", description="Create a vote")
+    @app_commands.describe(anonyme="Vote anonyme ?", thread="Create an associated thread?", proposition="Voting proposal")
     async def vote_create(self, interaction: discord.Interaction, anonyme: bool, thread: bool, proposition: str):
         """Crée un vote"""
         embed = discord.Embed(
             color=discord.Color.green(),
-            title="Nouveau vote"
+            title="New Vote"
         )
         embed.add_field(name="Proposition", value=f"```{proposition}```")
         embed.set_author(
             name=self.display_name_and_id(interaction.user),
             icon_url=interaction.user.display_avatar.url
         )
-        embed.set_footer(text=f"Vote posté le {self.convert_date(datetime.now())}")
+        embed.set_footer(text=f"Vote posted on {self.convert_date(datetime.now())}")
 
         if anonyme:
             buttons = discord.ui.View()
@@ -63,28 +63,28 @@ class Vote(commands.Cog):
             )
             await thread.add_user(interaction.user)
 
-    @app_commands.command(name="vote_edit", description="Modifie un vote existant")
-    @app_commands.describe(message_id="ID du message de vote", new_proposition="Nouvelle proposition de vote")
+    @app_commands.command(name="vote_edit", description="Modify an existing vote")
+    @app_commands.describe(message_id="Voting message ID", new_proposition="New voting proposal")
     async def vote_edit(self, interaction: discord.Interaction, message_id: str, new_proposition: str):
         """Modifie un vote existant"""
         if not re.match(r"^\d{17,19}$", message_id):
-            return await interaction.response.send_message("ID de message invalide", ephemeral=True)
+            return await interaction.response.send_message("Invalid message ID", ephemeral=True)
 
         try:
             message = await interaction.channel.fetch_message(int(message_id))
         except discord.NotFound:
-            return await interaction.response.send_message("Message non trouvé dans ce salon", ephemeral=True)
+            return await interaction.response.send_message("Message not found in this salon", ephemeral=True)
 
         if not message.author == self.bot.user or not message.embeds:
-            return await interaction.response.send_message("Ce message n'est pas un vote", ephemeral=True)
+            return await interaction.response.send_message("This message is not a vote", ephemeral=True)
 
         original_embed = message.embeds[0]
         if interaction.user.id != int(re.search(r"\((\d+)\)", original_embed.author.name).group(1)):
-            return await interaction.response.send_message("Vous n'êtes pas l'auteur de ce vote", ephemeral=True)
+            return await interaction.response.send_message("You are not the author of this vote", ephemeral=True)
 
         new_embed = discord.Embed(
             color=discord.Color.green(),
-            title="Nouveau vote (modifié)"
+            title="New vote (modified)"
         )
         new_embed.add_field(name="Proposition", value=f"```{new_proposition}```")
         new_embed.set_author(
@@ -92,15 +92,15 @@ class Vote(commands.Cog):
             icon_url=interaction.user.display_avatar.url
         )
         new_embed.set_footer(
-            text=f"Vote posté le {original_embed.footer.text.split('posté le ')[1]}\n"
-                f"Modifié le {self.convert_date(datetime.now())}"
+            text=f"Vote posted on {original_embed.footer.text.split('posted on ')[1]}\n"
+                f"Amended on {self.convert_date(datetime.now())}"
         )
 
         if hasattr(original_embed, "description"):
             new_embed.description = original_embed.description
 
         await message.edit(embed=new_embed)
-        await interaction.response.send_message("Proposition de vote modifiée 👌", ephemeral=True)
+        await interaction.response.send_message("Modified voting proposal 👌", ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(Vote(bot))

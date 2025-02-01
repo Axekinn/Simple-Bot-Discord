@@ -20,7 +20,7 @@ def diff_date(date):
     days = delta.days
     hours, remainder = divmod(delta.seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
-    return f"{days} jours, {hours} heures"
+    return f"{days} days, {hours} hours, {minutes} minutes, {seconds} seconds"
 
 def display_name_and_id(member):
     return f"{member.display_name} ({member.id})"
@@ -29,7 +29,7 @@ class Whois(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='whois',description="Donne des informations sur un utiliateur.")
+    @commands.command(name='whois',description="Provides information about a user.")
     async def whois(self, ctx, member: discord.Member = None):
         if member is None:
             member = ctx.author
@@ -40,17 +40,17 @@ class Whois(commands.Cog):
             icon_url=member.avatar.url if member.avatar else None
         )
         embed.add_field(
-            name="Compte de l'utilisateur",
+            name="User account",
             value=member,
             inline=True
         )
         embed.add_field(
-            name='Compte créé le',
+            name='Account created on',
             value=convert_date_for_discord(member.created_at),
             inline=True
         )
         embed.add_field(
-            name="Âge du compte",
+            name="Account age",
             value=diff_date(member.created_at),
             inline=True
         )
@@ -60,19 +60,19 @@ class Whois(commands.Cog):
             inline=True
         )
         embed.add_field(
-            name='Serveur rejoint le',
+            name='Server joins',
             value=convert_date_for_discord(member.joined_at),
             inline=True
         )
         embed.add_field(
-            name='Est sur le serveur depuis',
+            name='Has been on the server since',
             value=diff_date(member.joined_at),
             inline=True
         )
 
         if member.premium_since:
             embed.add_field(
-                name='Boost Nitro depuis',
+                name='Boost Nitro since',
                 value=diff_date(member.premium_since),
                 inline=True
             )

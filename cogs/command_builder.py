@@ -33,30 +33,30 @@ class CommandBuilder(commands.Cog):
             async def dynamic_command(ctx):
                 await ctx.send(command_response)
             dynamic_command.__name__ = f"dynamic_command_{command_name}"
-            self.bot.command(name=command_name, description="Commande personnalisée.")(dynamic_command)
+            self.bot.command(name=command_name, description="Customized command.")(dynamic_command)
             print(f"Commande `{command_name}` enregistrée.")
 
-    @commands.command(name="create_command", description="Permet de créer une commande personnalisée.")
+    @commands.command(name="create_command", description="Create a custom command.")
     @commands.has_permissions(administrator=True)
     async def create_command(self, ctx):
         """Commande pour créer une nouvelle commande personnalisée."""
         def check(m):
             return m.author == ctx.author and m.channel == ctx.channel
 
-        await ctx.send("Veuillez entrer le nom de la nouvelle commande:")
+        await ctx.send("Please enter the name of the new order:")
         try:
             name_msg = await self.bot.wait_for("message", check=check, timeout=60)
             command_name = name_msg.content.strip()
 
             if not command_name.isalnum():
-                await ctx.send("Le nom de la commande doit être alphanumérique sans espaces.")
+                await ctx.send("The order name must be alphanumeric with no spaces.")
                 return
 
             if command_name in self.commands_data or self.bot.get_command(command_name):
-                await ctx.send(f"Une commande nommée `{command_name}` existe déjà.")
+                await ctx.send(f"A command named `{command_name}` already exists.")
                 return
 
-            await ctx.send("Veuillez entrer la réponse de la nouvelle commande:")
+            await ctx.send("Please enter the new command response:")
             response_msg = await self.bot.wait_for("message", check=check, timeout=60)
             command_response = response_msg.content.strip()
 
@@ -67,10 +67,10 @@ class CommandBuilder(commands.Cog):
             # Enregistrer la nouvelle commande dynamiquement
             self.register_command(command_name, command_response)
 
-            await ctx.send(f"Commande `{command_name}` a été créée avec succès!")
+            await ctx.send(f"Command `{command_name}` has been successfully created!")
 
         except asyncio.TimeoutError:
-            await ctx.send("Vous avez mis trop de temps à répondre. Veuillez réessayer.")
+            await ctx.send("You took too long to reply. Please try again.")
 
     @commands.Cog.listener()
     async def on_ready(self):
