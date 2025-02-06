@@ -11,6 +11,7 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 from typing import Optional
+from discord.errors import NotFound
 
 
 class Owner(commands.Cog, name="propriétaire"):
@@ -199,7 +200,11 @@ class Owner(commands.Cog, name="propriétaire"):
         :param message: Le message que le bot devrait répéter.
         """
         await context.send(message)
-        await context.message.delete()
+        try:
+            await context.message.delete()
+        except NotFound:
+            # Le message n'existe plus, donc on ignore l'erreur
+            pass
 
     @commands.hybrid_command(
         name="embed",

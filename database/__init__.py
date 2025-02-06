@@ -94,3 +94,44 @@ class DatabaseManager:
             for row in result:
                 result_list.append(row)
             return result_list
+
+    async def add_server(self, server_id: int) -> None:
+        await self.connection.execute(
+            "INSERT OR IGNORE INTO servers (server_id) VALUES (?)",
+            (server_id,)
+        )
+        await self.connection.commit()
+
+    async def get_server_prefix(self, server_id: int) -> str:
+        rows = await self.connection.execute(
+            "SELECT prefix FROM servers WHERE server_id=?",
+            (server_id,)
+        )
+        async with rows as cursor:
+            result = await cursor.fetchone()
+            return result[0] if result else "!"
+
+    async def set_server_prefix(self, server_id: int, prefix: str) -> None:
+        await self.connection.execute(
+            "UPDATE servers SET prefix=? WHERE server_id=?",
+            (prefix, server_id)
+        )
+        await self.connection.commit()
+
+    async def add_xp(self, server_id: int, xp: int) -> None:
+        await self.connection.execute(
+            "UPDATE servers SET xp = xp + ? WHERE server_id=?",
+            (xp, server_id)
+        )
+        await self.connection.commit()
+
+    async def get_xp(self, server_id: int) -> int:
+        rows = await self.connection.execute(
+            "SELECT xp FROM servers WHERE server_id=?",
+            (server_id,)
+        )
+        async with rows as cursor:
+            result = await cursor.fetchone()
+            return result[0] if result else 0
+
+    # Add methods for giveaways as needed
