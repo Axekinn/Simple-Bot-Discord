@@ -10,16 +10,12 @@
                 "description": "Aide pour utiliser UserDiag et diagnostiquer votre PC"
             },
             "jd": {
-                "response": "**JDownloader 2 : Qu'est-ce que c'est et comment l'utiliser ?**...",
+                "response": "**JDownloader 2 : Qu'est-ce que c'est et comment l'utiliser ?**",
                 "description": "Guide complet sur JDownloader 2 et son utilisation"
             },
             "cpp": {
-                "response": "<https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/>...",
+                "response": "<https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/>",
                 "description": "Installation des Visual C++ Redistributables"
-            },
-            "redist": {
-                "response": "<https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/>...",
-                "description": "Visual C++ Redistributables installation guide (EN)"
             },
             "wd": {
                 "response": "### **Comment exclure un dossier dans Windows Defender**...",

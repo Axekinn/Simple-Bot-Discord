@@ -5,13 +5,15 @@ import json
 import os
 import math
 
-# Remplacez par l'ID de votre canal spécifique
-LEVEL_UP_CHANNEL_ID = 1104041737850196019
-
 class XP(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.xp_data = self.load_xp_data()
+        # Dictionnaire pour stocker les canaux de level up par serveur
+        self.level_up_channels = {
+            "797781758841847808": 1104041737850196019,  # Serveur 1
+            "1289627804211609640": 1336777782952198274,  # Serveur 2
+        }
 
     def load_xp_data(self):
         if os.path.exists("xp_data.json"):
@@ -77,9 +79,15 @@ class XP(commands.Cog):
 
     async def notify_level_up(self, user_id, server_id):
         try:
-            channel = self.bot.get_channel(LEVEL_UP_CHANNEL_ID)
+            # Récupère l'ID du canal pour ce serveur
+            channel_id = self.level_up_channels.get(server_id)
+            if not channel_id:
+                print(f"[XP] [Server:{server_id}] Pas de canal level up configuré")
+                return
+
+            channel = self.bot.get_channel(channel_id)
             if channel is None:
-                print(f"[XP] [Server:{server_id}] [User:{user_id}] Canal {LEVEL_UP_CHANNEL_ID} introuvable")
+                print(f"[XP] [Server:{server_id}] [User:{user_id}] Canal {channel_id} introuvable")
                 return
 
             user = self.bot.get_user(int(user_id))
@@ -96,10 +104,10 @@ class XP(commands.Cog):
             if user:
                 try:
                     new_level = self.xp_data[server_id][str(user_id)]['level']
-                    await channel.send(f"Félicitations {user}! Vous avez atteint le niveau {new_level}!")
+                    await channel.send(f"Congratulations {user}! You have reached the level {new_level}!")
                     print(f"[XP] [Server:{server_id}] [User:{user_id}] Notification level {new_level} envoyée")
                 except discord.Forbidden:
-                    print(f"[XP] [Server:{server_id}] [User:{user_id}] Impossible d'envoyer au canal {LEVEL_UP_CHANNEL_ID}")
+                    print(f"[XP] [Server:{server_id}] [User:{user_id}] Impossible d'envoyer au canal {channel_id}")
         
         except Exception as e:
             print(f"[XP] [ERROR] [Server:{server_id}] [User:{user_id}] Erreur notify_level_up: {str(e)}")
@@ -136,21 +144,21 @@ class XP(commands.Cog):
             xp = 0
             level = 1
 
-        embed = discord.Embed(title="Votre Profil XP", color=0x00ff00)
+        embed = discord.Embed(title="Your XP Profile", color=0x00ff00)
         embed.set_thumbnail(url=ctx.author.avatar.url)
-        embed.add_field(name="Serveur", value=ctx.guild.name, inline=False)
-        embed.add_field(name="Utilisateur", value=ctx.author.display_name, inline=False)
-        embed.add_field(name="Niveau", value=str(level), inline=True)
+        embed.add_field(name="Server", value=ctx.guild.name, inline=False)
+        embed.add_field(name="User", value=ctx.author.display_name, inline=False)
+        embed.add_field(name="Level", value=str(level), inline=True)
         embed.add_field(name="XP", value=str(xp), inline=True)
 
         await ctx.send(embed=embed)
 
-    @commands.command(name='leaderboard', help='Affiche le classement XP du serveur')
+    @commands.command(name='leaderboard', help='Displays the server XP ranking')
     async def leaderboard(self, ctx):
         server_id = str(ctx.guild.id)
         
         if server_id not in self.xp_data:
-            await ctx.send("Aucune donnée XP n'existe pour ce serveur!")
+            await ctx.send("No XP data exists for this server!")
             return
             
         # Trie les utilisateurs par XP
@@ -160,18 +168,29 @@ class XP(commands.Cog):
             reverse=True
         )[:10]  # Top 10
 
-        embed = discord.Embed(title=f"Classement XP - {ctx.guild.name}", color=0x00ff00)
+        embed = discord.Embed(title=f"Leadboard XP - {ctx.guild.name}", color=0x00ff00)
         
         for rank, (user_id, data) in enumerate(sorted_users, 1):
             user = ctx.guild.get_member(int(user_id))
             if user:
                 embed.add_field(
                     name=f"#{rank} {user.display_name}",
-                    value=f"Niveau: {data['level']} | XP: {data['xp']}",
+                    value=f"Level: {data['level']} | XP: {data['xp']}",
                     inline=False
                 )
 
         await ctx.send(embed=embed)
+
+    # Commande pour configurer le canal de level up
+    @commands.command(name="setlevelup")
+    @commands.has_permissions(administrator=True)
+    async def set_level_up_channel(self, ctx, channel: discord.TextChannel = None):
+        """Configure le canal pour les notifications de level up"""
+        channel = channel or ctx.channel
+        server_id = str(ctx.guild.id)
+        
+        self.level_up_channels[server_id] = channel.id
+        await ctx.send(f"Canal de level up configuré sur {channel.mention}")
 
 async def setup(bot):
     await bot.add_cog(XP(bot))
