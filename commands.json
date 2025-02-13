@@ -1,9 +1,64 @@
 {
-    "logss": "-> N'ouvrez PAS Ryujinx à nouveau, sinon le fichier journal sera recréé.\n-> Naviguez jusqu'au dossier « Logs » où se trouve Ryujinx.exe.\n-> Envoyez le dernier fichier de log, le fichier entier, pas seulement le contenu à l'intérieur.\n-> Si vous avez ouvert Ryujinx après un crash, partagez le log juste avant le dernier log.",
-    "ud": "Ce petit logiciel va réaliser un diagnostic de votre pc afin d'identifier ce qui ne va pas :\n1. Télécharger l'application : <https://userdiag.com/>\n2. Fermer le plus grand nombre d'applications ouvertes\n3. Lancer l'application puis le **__diagnostic rapide__**\n4. **Lorsque le test est terminé, __envoyer le lien dans ce salon__ (CTRL + V)**",
-    "jd": "**JDownloader 2 : Qu'est-ce que c'est et comment l'utiliser ?**  \n\nJDownloader 2 est un gestionnaire de téléchargement gratuit et open-source qui permet d'automatiser et de simplifier le téléchargement de fichiers depuis divers hébergeurs et plateformes en ligne. Il est particulièrement utile pour télécharger plusieurs fichiers en même temps, contourner les restrictions de certains sites et récupérer des vidéos depuis des plateformes comme YouTube ou Dailymotion.  \n\n### **Comment l'utiliser ?**  \n1. **Installation** : Téléchargez et installez JDownloader 2 depuis le site officiel.  \n2. **Ajout de liens** : Copiez l’URL du fichier que vous souhaitez télécharger, JDownloader l'ajoutera automatiquement à la liste de téléchargement.  \n3. **Lancement du téléchargement** : Cliquez sur \"Démarrer\" et laissez le logiciel gérer l’ensemble du processus.  \n\n### **Pourquoi utiliser JDownloader 2 ?**  \n- **Automatisation** : Il gère les captchas, les délais d’attente et les reconnections automatiques.  \n- **Pratique pour les fichiers volumineux** : Prise en charge du téléchargement fractionné pour accélérer la vitesse.  \n- **Compatible avec de nombreux sites** : Fonctionne avec des plateformes d’hébergement et des services de streaming.  \n\n### **Où télécharger JDownloader 2 ?**  \nVous pouvez télécharger JDownloader 2 en toute sécurité sur son site officiel : https://jdownloader.org/  \n\n🚀 **Un outil indispensable pour optimiser vos téléchargements !**",
-    "cpp": "<https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/>\n1. Cliquer sur le lien ci dessus, puis cliquer sur \"Download\"\n2. Cliquer sur n'importe quel drapeau pour lancer le téléchargement\n3. Extraire l'archive : faire clic droit -> **\"Extraire tout\"**, puis appuyer sur **\"Extraire\"**\n4. Le dossier extrait s'ouvre : clic droit sur **\"install_all\"** -> **\"Exécuter en tant qu’administrateur\"** pour lancer l'installation\n5. Attendre la fin, redémarrer le PC, puis tester ce qui ne fonctionnait pas",
-    "redist": "<https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/>\n1. Click on the link above, then click on ‘Download’.\n2. Click on any flag to start the download\n3. Extract the archive: right-click -> **\"Extract all “**, then press **”Extract ’**.\n4. The extracted folder opens: right-click on **\"install_all “** -> **”Run as administrator ’** to launch the installation\n5. Wait for it to finish, restart the PC, then test what wasn't working",
-    "wd": "### **Comment exclure un dossier dans Windows Defender**\n\nMicrosoft Defender Antivirus (anciennement Windows Defender) fournit une protection en temps réel contre les menaces, mais il peut parfois bloquer des fichiers ou des dossiers légitimes. Pour éviter cela, vous pouvez **exclure un dossier spécifique** de l’scan. Suivez ces étapes :\n\n### **1. Ouvrir les paramètres de Windows Defender**\n\n1. **Cliquez sur le menu Démarrer** (icône Windows en bas à gauche de l’écran).\n\n2. **Tapez « Windows Security »** et ouvrez l’application correspondante.\n\n3. Dans la nouvelle fenêtre, cliquez sur **Protection contre les virus et les menaces**.\n\n### **2. Accéder aux paramètres d’exclusion**\n\n4. Faites défiler vers le bas et cliquez sur **Gérer les paramètres** dans la section **Paramètres de protection contre les virus et les menaces**.\n\n5. Faites défiler plus bas pour trouver **Exclusions**, puis cliquez sur **Ajouter ou supprimer des exclusions**.\n\n### **3. Ajouter un dossier aux exclusions**\n\n6. Cliquez sur **Ajouter une exclusion**, puis sélectionnez **Dossier**.\n\n7. Accédez au dossier que vous souhaitez exclure, sélectionnez-le et cliquez sur **OK**.\n\nUne fois ajouté, Microsoft Defender n’analysera plus ce dossier, ce qui réduit les risques de faux positifs tout en améliorant les performances des fichiers de confiance.\n\nVoici 2 vidéos pour démontrer cette configuration :\n\n<https://www.youtube.com/watch?v=BonLkFNnO9w>\n<https://www.youtube.com/watch?v=zGiNGnX5dYg>",
-    "revo": "1. Installer la version gratuite portable de <https://www.revouninstaller.com/>\n2. Extraire et démarrer Revo Uninstaller, cibler le logiciel à désinstaller et cliquer sur \"désinstaller\"\n3. Décocher la case demandant de créer un point de restauration système\n4. Le désinstallateur par défaut se lance. Aller jusqu'au bout de la démarche, jusqu'à ce qu'il n'y ai plus de fenêtre en lien avec le désinstallateur et que la désinstallation soit finie.\n5. Cocher la case \"Advanced\" ou \"Avancé\" et cliquer sur suivant.\n6. Supprimer toutes les clés de registre restantes dans Revo (bouton \"Sélectionner tout\" puis bouton \"Supprimer\")\n7. Supprimer tous les fichiers restants dans Revo (bouton \"Sélectionner tout\" puis bouton \"Supprimer\")\n8. Fermer Revo\n9. Redémarrer son PC\n10. Chercher manuellement dans plusieurs dossiers s'il ne reste pas des fichiers de configuration et les supprimer :\n```C:/Users/[ton nom d'utilisateur]/AppData/Roaming\nC:/Users/[ton nom d'utilisateur]/AppData/Local\nC:/Users/Public/AppData/Roaming\nC:/Users/Public/AppData/Local\nC:/ProgramData\nC:/Program Files\nC:/Program Files (x86)```\n\n11. Supprimer Revo Uninstaller Portable"
+    "servers": {
+        "797781758841847808": {
+            "logss": {
+                "response": "-> N'ouvrez PAS Ryujinx à nouveau, sinon le fichier journal sera recréé.\n-> Naviguez jusqu'au dossier « Logs » où se trouve Ryujinx.exe.\n-> Envoyez le dernier fichier de log, le fichier entier, pas seulement le contenu à l'intérieur.\n-> Si vous avez ouvert Ryujinx après un crash, partagez le log juste avant le dernier log.",
+                "description": "Guide pour partager les logs de Ryujinx"
+            },
+            "ud": {
+                "response": "Ce petit logiciel va réaliser un diagnostic de votre pc afin d'identifier ce qui ne va pas :\n1. Télécharger l'application : <https://userdiag.com/>\n2. Fermer le plus grand nombre d'applications ouvertes\n3. Lancer l'application puis le **__diagnostic rapide__**\n4. **Lorsque le test est terminé, __envoyer le lien dans ce salon__ (CTRL + V)**",
+                "description": "Aide pour utiliser UserDiag et diagnostiquer votre PC"
+            },
+            "jd": {
+                "response": "**JDownloader 2 : Qu'est-ce que c'est et comment l'utiliser ?**...",
+                "description": "Guide complet sur JDownloader 2 et son utilisation"
+            },
+            "cpp": {
+                "response": "<https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/>...",
+                "description": "Installation des Visual C++ Redistributables"
+            },
+            "redist": {
+                "response": "<https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/>...",
+                "description": "Visual C++ Redistributables installation guide (EN)"
+            },
+            "wd": {
+                "response": "### **Comment exclure un dossier dans Windows Defender**...",
+                "description": "Guide pour exclure des dossiers dans Windows Defender"
+            },
+            "revo": {
+                "response": "1. Installer la version gratuite portable de <https://www.revouninstaller.com/>...",
+                "description": "Guide de désinstallation avec Revo Uninstaller"
+            }
+        },
+        "1289627804211609640": {
+            "wd": {
+                "response": "### **How to Exclude a Folder in Windows Defender**  \n\nMicrosoft Defender Antivirus (formerly Windows Defender) provides real-time protection against threats, but sometimes it may block legitimate files or folders. To prevent this, you can **exclude a specific folder** from being scanned. Follow these steps:  \n\n### **1. Open Windows Defender Settings**  \n1. **Click on the Start menu** (Windows icon at the bottom left of the screen).  \n2. **Type \"Windows Security\"** and open the corresponding app.  \n3. In the new window, click on **Virus & threat protection**.  \n\n### **2. Access the Exclusions Settings**  \n4. Scroll down and click on **Manage settings** under the **Virus & threat protection settings** section.  \n5. Scroll further down to find **Exclusions**, then click on **Add or remove exclusions**.  \n\n### **3. Add a Folder to Exclusions**  \n6. Click on **Add an exclusion**, then select **Folder**.  \n7. Navigate to the folder you want to exclude, select it, and click **OK**.  \n\nOnce added, Microsoft Defender will no longer scan this folder, reducing the chances of false positives while improving performance for trusted files.\n\nHere 2 videos to demonstrate this setup :\n<https://www.youtube.com/watch?v=BonLkFNnO9w>\n<https://www.youtube.com/watch?v=zGiNGnX5dYg>",
+                "description": "How to exclude a folder in Windows Defender"
+            },
+            "dl": {
+                "response": "**How to Increase Download Speed**\n\nUse Free Download Manager (FDM) or Internet Download Manager (IDM), and their respective Browser Extension.\n\nFree Download Manager: <https://www.freedownloadmanager.org>\nInternet Download Manager: <https://www.internetdownloadmanager.com/>",
+                "description": "Guide to improving download speed"
+            },
+            "dns": {
+                "response": "## **Changing DNS System-Wide**  \n\nIf you want **all applications** (not just your browser) to use a specific DNS, you'll need to change the DNS settings at the operating system level:  \n- **Windows:** Go to `Control Panel > Network & Internet > Change adapter settings`, then modify DNS settings in your network properties.  \n- **Mac:** Open `System Preferences > Network > Advanced > DNS` and enter your preferred DNS servers.  \n- **Linux:** Modify the `/etc/resolv.conf` file or use **Network Manager** to change your DNS.  \n\n---\n\n### **Recommended Public DNS Providers:**  \n- **Cloudflare DNS:** `1.1.1.1` and `1.0.0.1` (secure & privacy-focused)  \n- **Google DNS:** `8.8.8.8` and `8.8.4.4` (fast & reliable)  \n- **OpenDNS:** `208.67.222.222` and `208.67.220.220` (extra security features)  \n- **Quad9:** `9.9.9.9` (blocks malicious domains)",
+                "description": "Guide to changing system DNS"
+            },
+            "fp": {
+                "response": "### **What is a False Positive in Antivirus Software?**\n\nA **false positive** occurs when antivirus or security software mistakenly identifies a legitimate, harmless file as malicious or infected with a virus. \n\nThis happens because:\n\n1. **Antivirus software** scans files for patterns, behaviors, or code sequences commonly associated with viruses or malware.\n2. Sometimes, **legitimate programs** or files may share characteristics (such as similar code or behavior) with known threats.\n3. As a result, the antivirus mistakenly flags these **safe files** as harmful.\n\n### Example:\n- **Legitimate file:** A new software update or a file from a trusted source.\n- **Antivirus action:** The software flags it as a virus.\n- **Reality:** The file is actually harmless, but the antivirus falsely identifies it as dangerous.\n\n### How to Handle False Positives:\n- **Update the antivirus**: Sometimes false positives are fixed with new virus definitions.\n- **Whitelist the file**: You can manually tell the antivirus that the file is safe.\n\nIn short, a **false positive** is when security software incorrectly identifies a legitimate file as a threat.",
+                "description": "Explanation of antivirus false positives"
+            },
+            "info": {
+                "response": "Wanna know whether a game has **DLC** or not, or maybe looking for something else? Every game has a **\"Game Features\"** button at its page, click it, and there should be all the info you are looking for.",
+                "description": "How to find game information"
+            },
+            "controller": {
+                "response": "Whether you're using a PlayStation, Xbox, or any other compatible controller, this guide you through the simple steps to get your controller ready for gaming in no time : <https://www.makeuseof.com/how-to-set-up-use-console-controllers-steam/>",
+                "description": "Joystick configuration guide"
+            },
+            "redist": {
+                "response": "<https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/>\n1. Click on the link above, then click on ‘Download’.\n2. Click on any flag to start the download\n3. Extract the archive: right-click -> **\"Extract all “**, then press **”Extract ’**.\n4. The extracted folder opens: right-click on **\"install_all “** -> **”Run as administrator ’** to launch the installation\n5. Wait for it to finish, restart the PC, then test what wasn't working",
+                "description": "How to install Visual C++ Redistributables"
+            }
+        }
+    }
 }
