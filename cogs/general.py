@@ -37,6 +37,23 @@ class FeedbackForm(discord.ui.Modal):
         self.answer = str(self.feedback)
         self.stop()
 
+class DMModal(discord.ui.Modal):
+    def __init__(self):
+        super().__init__(title="Send Private Message")
+        
+    message = discord.ui.TextInput(
+        label="Select message type",
+        style=discord.TextStyle.short,
+        placeholder="Type 1 to send official link to DM",
+        required=True,
+        max_length=1,
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        self.interaction = interaction
+        self.content = str(self.message)
+        self.stop()
+
 
 class General(commands.Cog, name="general"):
     def __init__(self, bot) -> None:
@@ -49,6 +66,15 @@ class General(commands.Cog, name="general"):
             name="Delet Spoiler", callback=self.remove_spoilers
         )
         self.bot.tree.add_command(self.context_menu_message)
+        self.context_menu_dm = app_commands.ContextMenu(
+            name="Send DM",
+            callback=self.send_dm_context
+        )
+        self.bot.tree.add_command(self.context_menu_dm)
+        # Ajoutez ces messages prédéfinis
+        self.predefined_messages = {
+            "1": "Here's the official link to our website: https://ankergames.net/"
+        }
 
     # Commande de menu contextuel de message
     async def remove_spoilers(
@@ -89,6 +115,35 @@ class General(commands.Cog, name="general"):
             color=0xBEBEFE,
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    async def send_dm_context(
+        self, interaction: discord.Interaction, user: discord.User
+    ) -> None:
+        """Context menu version of the DM command"""
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("You need administrator permissions to use this command.", ephemeral=True)
+            return
+            
+        modal = DMModal()
+        await interaction.response.send_modal(modal)
+        await modal.wait()
+        
+        try:
+            message_type = modal.content.strip()
+            if message_type not in self.predefined_messages:
+                await modal.interaction.response.send_message("Invalid message type. Please use 1, 2, or 3.", ephemeral=True)
+                return
+
+            await user.send(self.predefined_messages[message_type])
+            await modal.interaction.response.send_message(
+                f"Predefined message {message_type} sent to {user.name}!", 
+                ephemeral=True
+            )
+        except discord.Forbidden:
+            await modal.interaction.response.send_message(
+                f"Could not send message to {user.name}. They might have DMs disabled.", 
+                ephemeral=True
+            )
 
     @commands.hybrid_command(name="help", description="Displays the list of available commands.")
     async def help(self, ctx):

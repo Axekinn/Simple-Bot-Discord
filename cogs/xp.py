@@ -114,9 +114,16 @@ class XP(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        """Gestionnaire d'événements pour les messages"""
+        # Ignore les messages du bot
         if message.author.bot:
             return
         
+        # Ignore les messages privés (DM)
+        if not message.guild:
+            return
+        
+        # Ajoute l'XP seulement pour les messages dans les serveurs
         await self.add_xp(message.author.id, message.guild.id, 10)
 
     @commands.command(name="resetxp")
