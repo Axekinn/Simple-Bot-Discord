@@ -54,6 +54,10 @@
             "redist": {
                 "response": "<https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/>\n1. Click on the link above, then click on ‘Download’.\n2. Click on any flag to start the download\n3. Extract the archive: right-click -> **\"Extract all “**, then press **”Extract ’**.\n4. The extracted folder opens: right-click on **\"install_all “** -> **”Run as administrator ’** to launch the installation\n5. Wait for it to finish, restart the PC, then test what wasn't working",
                 "description": "How to install Visual C++ Redistributables"
+            },
+            "sm2": {
+                "response": "https://discord.com/channels/1289627804211609640/1309841345904381952/1340074667935010907",
+                "description": "YES IT WORKING"
             }
         }
     }
