@@ -3,61 +3,95 @@
         "797781758841847808": {
             "logss": {
                 "response": "-> N'ouvrez PAS Ryujinx à nouveau, sinon le fichier journal sera recréé.\n-> Naviguez jusqu'au dossier « Logs » où se trouve Ryujinx.exe.\n-> Envoyez le dernier fichier de log, le fichier entier, pas seulement le contenu à l'intérieur.\n-> Si vous avez ouvert Ryujinx après un crash, partagez le log juste avant le dernier log.",
-                "description": "Guide pour partager les logs de Ryujinx"
+                "description": "Guide pour partager les logs de Ryujinx",
+                "messages": 44,
+                "last_message": 0
             },
             "ud": {
                 "response": "Ce petit logiciel va réaliser un diagnostic de votre pc afin d'identifier ce qui ne va pas :\n1. Télécharger l'application : <https://userdiag.com/>\n2. Fermer le plus grand nombre d'applications ouvertes\n3. Lancer l'application puis le **__diagnostic rapide__**\n4. **Lorsque le test est terminé, __envoyer le lien dans ce salon__ (CTRL + V)**",
-                "description": "Aide pour utiliser UserDiag et diagnostiquer votre PC"
+                "description": "Aide pour utiliser UserDiag et diagnostiquer votre PC",
+                "messages": 44,
+                "last_message": 0
             },
             "jd": {
                 "response": "**JDownloader 2 : Qu'est-ce que c'est et comment l'utiliser ?**",
-                "description": "Guide complet sur JDownloader 2 et son utilisation"
+                "description": "Guide complet sur JDownloader 2 et son utilisation",
+                "messages": 44,
+                "last_message": 0
             },
             "cpp": {
                 "response": "<https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/>",
-                "description": "Installation des Visual C++ Redistributables"
-            },
-            "wd": {
-                "response": "### **Comment exclure un dossier dans Windows Defender**...",
-                "description": "Guide pour exclure des dossiers dans Windows Defender"
+                "description": "Installation des Visual C++ Redistributables",
+                "messages": 44,
+                "last_message": 0
             },
             "revo": {
-                "response": "1. Installer la version gratuite portable de <https://www.revouninstaller.com/>...",
-                "description": "Guide de désinstallation avec Revo Uninstaller"
+                "response": "1. Installer la version gratuite portable de <https://www.revouninstaller.com/>\n2. Extraire et démarrer Revo Uninstaller, cibler le logiciel à désinstaller et cliquer sur \"désinstaller\"\n3. Décocher la case demandant de créer un point de restauration système\n4. Le désinstallateur par défaut se lance. Aller jusqu'au bout de la démarche, jusqu'à ce qu'il n'y ai plus de fenêtre en lien avec le désinstallateur et que la désinstallation soit finie.\n5. Cocher la case \"Advanced\" ou \"Avancé\" et cliquer sur suivant.\n6. Supprimer toutes les clés de registre restantes dans Revo (bouton \"Sélectionner tout\" puis bouton \"Supprimer\")\n7. Supprimer tous les fichiers restants dans Revo (bouton \"Sélectionner tout\" puis bouton \"Supprimer\")\n8. Fermer Revo\n9. Redémarrer son PC\n10. Chercher manuellement dans plusieurs dossiers s'il ne reste pas des fichiers de configuration et les supprimer :\n```C:/Users/[ton nom d'utilisateur]/AppData/Roaming\nC:/Users/[ton nom d'utilisateur]/AppData/Local\nC:/Users/Public/AppData/Roaming\nC:/Users/Public/AppData/Local\nC:/ProgramData\nC:/Program Files\nC:/Program Files (x86)```\n\n11. Supprimer Revo Uninstaller Portable",
+                "description": "Comment (bien) désinstaller une application"
+            },
+            "wd": {
+                "response": "### **Comment exclure un dossier dans Windows Defender**  \n\nMicrosoft Defender Antivirus (anciennement Windows Defender) fournit une protection en temps réel contre les menaces, mais il peut parfois bloquer des fichiers ou des dossiers légitimes. Pour éviter cela, vous pouvez **exclure un dossier spécifique** de l'analyse. Procédez comme suit :  \n\n### **1. Ouvrez les paramètres de Windows Defender**  \n1. **Cliquez sur le menu Démarrer** (icône Windows en bas à gauche de l'écran).  \n2. **Tapez « Sécurité Windows »** et ouvrez l'application correspondante.  \n3. Dans la nouvelle fenêtre, cliquez sur **Protection contre les virus et les menaces**.  \n\n### **2. Accédez aux paramètres d'exclusion**  \n4. Faites défiler vers le bas et cliquez sur **Gestion des paramètres** dans la section **Paramètres de protection contre les virus et les menaces**.  \n5. Faites défiler vers le bas pour trouver **Exclusions**, puis cliquez sur **Ajouter ou supprimer des exclusions**.  \n\n### **3. Ajouter un dossier aux exclusions**  \n6. Cliquez sur **Ajouter une exclusion**, puis sélectionnez **Dossier**.  \n7. Naviguez jusqu'au dossier que vous souhaitez exclure, sélectionnez-le et cliquez sur **OK**.  \n\nUne fois ajouté, Microsoft Defender n'analysera plus ce dossier, réduisant ainsi les risques de faux positifs tout en améliorant les performances pour les fichiers de confiance.\n\nVoici 2 vidéos pour démontrer cette configuration :\n<https://www.youtube.com/watch?v=BonLkFNnO9w>\n<https://www.youtube.com/watch?v=zGiNGnX5dYg>",
+                "description": "Procédure pour exclure un dossier de Windows Defender"
             }
         },
         "1289627804211609640": {
             "wd": {
                 "response": "### **How to Exclude a Folder in Windows Defender**  \n\nMicrosoft Defender Antivirus (formerly Windows Defender) provides real-time protection against threats, but sometimes it may block legitimate files or folders. To prevent this, you can **exclude a specific folder** from being scanned. Follow these steps:  \n\n### **1. Open Windows Defender Settings**  \n1. **Click on the Start menu** (Windows icon at the bottom left of the screen).  \n2. **Type \"Windows Security\"** and open the corresponding app.  \n3. In the new window, click on **Virus & threat protection**.  \n\n### **2. Access the Exclusions Settings**  \n4. Scroll down and click on **Manage settings** under the **Virus & threat protection settings** section.  \n5. Scroll further down to find **Exclusions**, then click on **Add or remove exclusions**.  \n\n### **3. Add a Folder to Exclusions**  \n6. Click on **Add an exclusion**, then select **Folder**.  \n7. Navigate to the folder you want to exclude, select it, and click **OK**.  \n\nOnce added, Microsoft Defender will no longer scan this folder, reducing the chances of false positives while improving performance for trusted files.\n\nHere 2 videos to demonstrate this setup :\n<https://www.youtube.com/watch?v=BonLkFNnO9w>\n<https://www.youtube.com/watch?v=zGiNGnX5dYg>",
-                "description": "How to exclude a folder in Windows Defender"
+                "description": "How to exclude a folder in Windows Defender",
+                "messages": 44,
+                "last_message": 0
             },
             "dl": {
                 "response": "**How to Increase Download Speed**\n\nUse Free Download Manager (FDM) or Internet Download Manager (IDM), and their respective Browser Extension.\n\nFree Download Manager: <https://www.freedownloadmanager.org>\nInternet Download Manager: <https://www.internetdownloadmanager.com/>",
-                "description": "Guide to improving download speed"
+                "description": "Guide to improving download speed",
+                "messages": 44,
+                "last_message": 0
             },
             "dns": {
                 "response": "## **Changing DNS System-Wide**  \n\nIf you want **all applications** (not just your browser) to use a specific DNS, you'll need to change the DNS settings at the operating system level:  \n- **Windows:** Go to `Control Panel > Network & Internet > Change adapter settings`, then modify DNS settings in your network properties.  \n- **Mac:** Open `System Preferences > Network > Advanced > DNS` and enter your preferred DNS servers.  \n- **Linux:** Modify the `/etc/resolv.conf` file or use **Network Manager** to change your DNS.  \n\n---\n\n### **Recommended Public DNS Providers:**  \n- **Cloudflare DNS:** `1.1.1.1` and `1.0.0.1` (secure & privacy-focused)  \n- **Google DNS:** `8.8.8.8` and `8.8.4.4` (fast & reliable)  \n- **OpenDNS:** `208.67.222.222` and `208.67.220.220` (extra security features)  \n- **Quad9:** `9.9.9.9` (blocks malicious domains)",
-                "description": "Guide to changing system DNS"
+                "description": "Guide to changing system DNS",
+                "messages": 44,
+                "last_message": 0
             },
             "fp": {
                 "response": "### **What is a False Positive in Antivirus Software?**\n\nA **false positive** occurs when antivirus or security software mistakenly identifies a legitimate, harmless file as malicious or infected with a virus. \n\nThis happens because:\n\n1. **Antivirus software** scans files for patterns, behaviors, or code sequences commonly associated with viruses or malware.\n2. Sometimes, **legitimate programs** or files may share characteristics (such as similar code or behavior) with known threats.\n3. As a result, the antivirus mistakenly flags these **safe files** as harmful.\n\n### Example:\n- **Legitimate file:** A new software update or a file from a trusted source.\n- **Antivirus action:** The software flags it as a virus.\n- **Reality:** The file is actually harmless, but the antivirus falsely identifies it as dangerous.\n\n### How to Handle False Positives:\n- **Update the antivirus**: Sometimes false positives are fixed with new virus definitions.\n- **Whitelist the file**: You can manually tell the antivirus that the file is safe.\n\nIn short, a **false positive** is when security software incorrectly identifies a legitimate file as a threat.",
-                "description": "Explanation of antivirus false positives"
+                "description": "Explanation of antivirus false positives",
+                "messages": 44,
+                "last_message": 0
             },
             "info": {
                 "response": "Wanna know whether a game has **DLC** or not, or maybe looking for something else? Every game has a **\"Game Features\"** button at its page, click it, and there should be all the info you are looking for.",
-                "description": "How to find game information"
+                "description": "How to find game information",
+                "messages": 44,
+                "last_message": 0
             },
             "controller": {
                 "response": "Whether you're using a PlayStation, Xbox, or any other compatible controller, this guide you through the simple steps to get your controller ready for gaming in no time : <https://www.makeuseof.com/how-to-set-up-use-console-controllers-steam/>",
-                "description": "Joystick configuration guide"
+                "description": "Joystick configuration guide",
+                "messages": 44,
+                "last_message": 0
             },
             "redist": {
                 "response": "<https://www.techpowerup.com/download/visual-c-redistributable-runtime-package-all-in-one/>\n1. Click on the link above, then click on ‘Download’.\n2. Click on any flag to start the download\n3. Extract the archive: right-click -> **\"Extract all “**, then press **”Extract ’**.\n4. The extracted folder opens: right-click on **\"install_all “** -> **”Run as administrator ’** to launch the installation\n5. Wait for it to finish, restart the PC, then test what wasn't working",
-                "description": "How to install Visual C++ Redistributables"
+                "description": "How to install Visual C++ Redistributables",
+                "messages": 44,
+                "last_message": 0
             },
             "sm2": {
                 "response": "https://discord.com/channels/1289627804211609640/1309841345904381952/1340074667935010907",
                 "description": "YES IT WORKING"
+            },
+            "ud": {
+                "response": "This little program will carry out a diagnosis of your PC to identify what is wrong with it:\n1. Download the application: <https://userdiag.com/>\n2. Close as many open applications as possible\n3. Launch the application and then the **__Quick Diagnostic__**.\n4. **When the test is complete, __send the link to this room__ (CTRL + V)**.",
+                "description": "Show specs and potential problem in your'e pc"
+            },
+            "mods": {
+                "response": "**Notice:** We do not offer support for game mods. If you require assistance with a mod, please contact the support team for the specific mod in question. Thank you for your understanding.",
+                "description": "**Notice:** We do not offer support for game mods. If you require assistance with a mod, please contact the support team for the specific mod in question. Thank you for your understanding."
+            },
+            "ini": {
+                "response": "# Changing Game Language via .ini File\n\n**Follow these steps to change the language of your game:**\n\n1. **Locate the Game Directory**:\n    - Find the folder where your game is installed. \n\n2. **Find the .ini File**:\n    - Look for a file with a `.ini` extension. This file usually contains the game's settings and configurations. It might be named something like `SteamConfig.ini` or `steam_api.ini` or `OnlineFix.ini`. or everything with a .ini\n\n3. **Open the .ini File**:\n    - Right-click on the `.ini` file and select `Open with` → `Notepad` or any other text editor you prefer.\n\n4. **Find the Language Setting**:\n    - Search within the file for a line that specifies the language setting. It might look something like this:\n```Language=English```\n\n\n5. **Change the Language Setting**:\n    - Replace the current language with your desired language. For example, to change the language to Spanish, modify the line to:\n      ```Language=Spanish```\n\n6. **Save the Changes**:\n    - Save the file by pressing `Ctrl + S` or going to `File` → `Save`.\n\n7. **Restart the Game**:\n    - Close and reopen the game for the changes to take effect.\n\n**Note:** Make sure to back up the original `.ini` file before making any changes, in case you need to revert to the default settings.",
+                "description": "How to edit .ini (basically for edit language, for example)"
             }
         }
     }

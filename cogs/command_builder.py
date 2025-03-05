@@ -201,12 +201,17 @@ class CommandBuilder(commands.Cog):
             embed.set_footer(text=f"Page {page_num}/{total_pages} • Use !create_command to create a command")
             return embed, total_pages
 
+        # Initialiser les variables pour le suivi des messages
+        paginated_messages = {}
+        current_pages = {}
+
         # Commandes globales
         global_commands = self.commands_data.get("global", {})
         if global_commands:
-            current_page = 1
-            embed, total_pages = create_embed("Commandes Globales", global_commands, current_page)
+            current_pages["global"] = 1
+            embed, total_pages = create_embed("Global Commands", global_commands, current_pages["global"])
             global_message = await ctx.send(embed=embed)
+            paginated_messages["global"] = {"message": global_message, "commands": global_commands, "total_pages": total_pages}
             
             if total_pages > 1:
                 await global_message.add_reaction("◀️")
@@ -214,43 +219,64 @@ class CommandBuilder(commands.Cog):
 
         # Commandes du serveur
         server_id = str(ctx.guild.id)
-        if server_id in self.commands_data.get("servers", {}):
+        if server_id in self.commands_data.get("servers", {}) and self.commands_data["servers"][server_id]:
             server_commands = self.commands_data["servers"][server_id]
-            current_page = 1
-            embed, total_pages = create_embed(f"Commands of {ctx.guild.name}", server_commands, current_page)
+            current_pages["server"] = 1
+            embed, total_pages = create_embed(f"Commands of {ctx.guild.name}", server_commands, current_pages["server"])
             server_message = await ctx.send(embed=embed)
+            paginated_messages["server"] = {"message": server_message, "commands": server_commands, "total_pages": total_pages}
             
             if total_pages > 1:
                 await server_message.add_reaction("◀️")
                 await server_message.add_reaction("▶️")
 
+        # Si aucune commande n'est disponible, informer l'utilisateur
+        if not paginated_messages:
+            await ctx.send("No custom commands available. Use `!create_command` to create one!")
+            return
+
         def check(reaction, user):
-            return user == ctx.author and str(reaction.emoji) in ["◀️", "▶️"]
+            # Vérifie que la réaction est sur un message que nous surveillons
+            return (user == ctx.author and 
+                    str(reaction.emoji) in ["◀️", "▶️"] and
+                    any(reaction.message.id == data["message"].id for data in paginated_messages.values()))
 
         # Gestion des réactions pour la pagination
         while True:
             try:
                 reaction, user = await self.bot.wait_for("reaction_add", timeout=60.0, check=check)
 
-                if str(reaction.emoji) == "▶️" and current_page < total_pages:
-                    current_page += 1
-                elif str(reaction.emoji) == "◀️" and current_page > 1:
-                    current_page -= 1
+                # Déterminer quel message a été réagi
+                message_type = None
+                for msg_type, data in paginated_messages.items():
+                    if reaction.message.id == data["message"].id:
+                        message_type = msg_type
+                        break
+
+                if not message_type:
+                    continue
+
+                # Mettre à jour la page
+                if str(reaction.emoji) == "▶️" and current_pages[message_type] < paginated_messages[message_type]["total_pages"]:
+                    current_pages[message_type] += 1
+                elif str(reaction.emoji) == "◀️" and current_pages[message_type] > 1:
+                    current_pages[message_type] -= 1
                 else:
                     await reaction.remove(user)
                     continue
 
                 # Met à jour l'embed avec la nouvelle page
-                if reaction.message.id == global_message.id:
-                    embed, _ = create_embed("Commandes Globales", global_commands, current_page)
-                    await global_message.edit(embed=embed)
-                else:
-                    embed, _ = create_embed(f"Commands of {ctx.guild.name}", server_commands, current_page)
-                    await server_message.edit(embed=embed)
+                title = "Global Commands" if message_type == "global" else f"Commands of {ctx.guild.name}"
+                embed, _ = create_embed(title, paginated_messages[message_type]["commands"], current_pages[message_type])
+                await paginated_messages[message_type]["message"].edit(embed=embed)
 
                 await reaction.remove(user)
 
             except asyncio.TimeoutError:
+                # Fin de la pagination après un délai d'inactivité
+                break
+            except Exception as e:
+                print(f"Error in pagination: {e}")
                 break
 
     @commands.Cog.listener()
