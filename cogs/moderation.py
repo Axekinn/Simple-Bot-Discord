@@ -7,7 +7,7 @@ Version: 6.2.0
 """
 
 import os
-from datetime import datetime
+from datetime import datetime, timedelta  # Ajout de timedelta ici
 
 import discord
 from discord import app_commands
@@ -363,6 +363,107 @@ class Moderation(commands.Cog, name="moderation"):
         await context.send(file=f)
         os.remove(log_file)
 
+    @commands.hybrid_command(
+        name="timeout",
+        description="Temporarily mute a user on the server.",
+    )
+    @commands.has_permissions(moderate_members=True)
+    @commands.bot_has_permissions(moderate_members=True)
+    @app_commands.describe(
+        user="The user to timeout.",
+        duration="The duration of the timeout in minutes (must be a number).",
+        reason="The reason for the timeout.",
+    )
+    async def timeout(
+        self, context: Context, user: discord.Member, duration: int, *, reason: str = "Not specified"
+    ) -> None:
+        """
+        Temporarily mutes a user on the server.
+
+        :param context: The context of the hybrid command.
+        :param user: The user to timeout.
+        :param duration: The duration of the timeout in minutes.
+        :param reason: The reason for the timeout. Default: "Not specified".
+        """
+        if user.guild_permissions.administrator:
+            embed = discord.Embed(
+                description="⚠️ You cannot timeout an administrator.",
+                color=0xE02B2B,
+            )
+            await context.send(embed=embed)
+            return
+            
+        # Vérification supplémentaire pour la durée
+        if duration <= 0:
+            embed = discord.Embed(
+                description="⚠️ Duration must be a positive number.",
+                color=0xE02B2B,
+            )
+            await context.send(embed=embed)
+            return
+            
+        if duration > 40320:  # 28 jours maximum (limite Discord)
+            embed = discord.Embed(
+                description="⚠️ Duration cannot exceed 28 days (40320 minutes).",
+                color=0xE02B2B,
+            )
+            await context.send(embed=embed)
+            return
+
+        try:
+            # Calculate the timestamp for timeout
+            timeout_until = discord.utils.utcnow() + timedelta(minutes=duration)
+            
+            # Using the timeout method instead of edit with the timeout parameter
+            await user.timeout(timeout_until, reason=reason)
+
+            # Send a message to the user
+            try:
+                dm_embed = discord.Embed(
+                    title="You have been timed out",
+                    description=f"You have been timed out on **{context.guild.name}** for **{duration} minutes**.",
+                    color=0xE02B2B,
+                )
+                dm_embed.add_field(name="Reason:", value=reason, inline=False)
+                dm_embed.set_footer(text="Please follow the server rules to avoid further actions.")
+                await user.send(embed=dm_embed)
+            except discord.Forbidden:
+                # If the bot cannot send a DM to the user
+                await context.send(f"⚠️ Could not send a DM to {user.mention}.")
+
+            # Send a confirmation message in the server
+            embed = discord.Embed(
+                description=f"✅ **{user}** has been timed out by **{context.author}** for **{duration} minutes**!",
+                color=0xBEBEFE,
+            )
+            embed.add_field(name="Reason:", value=reason, inline=False)
+            await context.send(embed=embed)
+
+        except discord.Forbidden:
+            embed = discord.Embed(
+                title="Error",
+                description="I don't have the necessary permissions to timeout this user.",
+                color=0xE02B2B,
+            )
+            await context.send(embed=embed)
+        except AttributeError:
+            embed = discord.Embed(
+                title="Error",
+                description="This version of discord.py doesn't support timeouts. Please update to discord.py 2.0+",
+                color=0xE02B2B,
+            )
+            await context.send(embed=embed)
+        except Exception as e:
+            embed = discord.Embed(
+                title="Error",
+                description=f"An error has occurred: {e}",
+                color=0xE02B2B,
+            )
+            await context.send(embed=embed)
+
 
 async def setup(bot) -> None:
     await bot.add_cog(Moderation(bot))
+    # Retirez ces lignes pour éviter une boucle infinie de rechargement
+    # await bot.reload_extension('cogs.moderation')
+    # await bot.tree.sync()
