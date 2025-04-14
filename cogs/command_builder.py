@@ -109,7 +109,7 @@ class CommandBuilder(commands.Cog):
         """Create a new custom command with an interactive interface."""
         # Répondre immédiatement pour éviter les erreurs d'interaction
         if ctx.interaction:
-            await ctx.defer()
+            await ctx.defer(ephemeral=True)  # Ajouter ephemeral=True ici
         
         # Utiliser des modaux pour une meilleure expérience utilisateur
         class CommandCreationModal(discord.ui.Modal, title="Create Custom Command"):
@@ -143,7 +143,7 @@ class CommandBuilder(commands.Cog):
             )
             
             async def on_submit(self, interaction: discord.Interaction):
-                await interaction.response.defer()
+                await interaction.response.defer(ephemeral=True)  # Ajouter ephemeral=True ici
                 
                 command_name = self.command_name.value.strip().lower()
                 description = self.command_description.value.strip()
@@ -167,6 +167,9 @@ class CommandBuilder(commands.Cog):
                     await interaction.followup.send(f"A server command named `{command_name}` already exists on this server.", ephemeral=True)
                     return
                 
+                # Vérifier si la réponse est proche de la limite pour proposer l'ajout de texte
+                is_near_limit = len(response) >= 900  # Si proche de la limite de 1000
+                
                 # Ajouter la commande
                 command_data = {
                     "description": description,
@@ -188,14 +191,103 @@ class CommandBuilder(commands.Cog):
                 cog.save_commands()
                 cog.register_command(command_name, command_data, is_global, server_id if not is_global else None)
                 
-                # Confirmer la création
+                # Confirmer la création avec option d'extension si la réponse est proche de la limite
                 scope_text = "global" if is_global else f"server-specific to {interaction.guild.name}"
-                await interaction.followup.send(
-                    embed=discord.Embed(
+                
+                if is_near_limit:
+                    # Créer une vue avec bouton pour ajouter du texte
+                    continue_view = ContinueResponseView(cog, command_name, is_global, server_id)
+                    
+                    embed = discord.Embed(
+                        title="✅ Command Created",
+                        description=f"The command `{command_name}` has been created and is {scope_text}!\n\n⚠️ Your response is near the character limit. Would you like to add more text?",
+                        color=discord.Color.gold()
+                    )
+                    await interaction.followup.send(embed=embed, view=continue_view, ephemeral=True)  # Ajouter ephemeral=True
+                else:
+                    embed = discord.Embed(
                         title="✅ Command Created",
                         description=f"The command `{command_name}` has been created and is {scope_text}!",
                         color=discord.Color.green()
                     )
+                    await interaction.followup.send(embed=embed, ephemeral=True)  # Ajouter ephemeral=True
+
+        # Vue pour continuer à ajouter du texte à la réponse
+        class ContinueResponseView(discord.ui.View):
+            def __init__(self, cog, command_name, is_global, server_id):
+                super().__init__(timeout=300)
+                self.cog = cog
+                self.command_name = command_name
+                self.is_global = is_global
+                self.server_id = server_id
+                
+            @discord.ui.button(label="Add More Text", style=discord.ButtonStyle.primary)
+            async def add_text(self, interaction, button):
+                # Au lieu d'attendre des messages dans le chat, utiliser un modal
+                class AdditionalTextModal(discord.ui.Modal, title="Add More Text"):
+                    additional_text = discord.ui.TextInput(
+                        label="Additional Text",
+                        style=discord.TextStyle.paragraph,
+                        placeholder="Enter additional text to append...",
+                        required=True,
+                        max_length=1000
+                    )
+                    
+                    async def on_submit(self, interaction: discord.Interaction):
+                        await interaction.response.defer(ephemeral=True)
+                        
+                        # Obtenir la réponse actuelle
+                        if self.view.is_global:
+                            current_response = self.view.cog.commands_data["global"][self.view.command_name]["response"]
+                            # Ajouter le texte
+                            self.view.cog.commands_data["global"][self.view.command_name]["response"] = current_response + "\n" + self.additional_text.value
+                            # Obtenir la nouvelle longueur
+                            new_length = len(self.view.cog.commands_data["global"][self.view.command_name]["response"])
+                        else:
+                            current_response = self.view.cog.commands_data["servers"][self.view.server_id][self.view.command_name]["response"]
+                            # Ajouter le texte
+                            self.view.cog.commands_data["servers"][self.view.server_id][self.view.command_name]["response"] = current_response + "\n" + self.additional_text.value
+                            # Obtenir la nouvelle longueur
+                            new_length = len(self.view.cog.commands_data["servers"][self.view.server_id][self.view.command_name]["response"])
+                        
+                        # Sauvegarder les modifications
+                        self.view.cog.save_commands()
+                        
+                        # Créer une vue pour continuer ou terminer
+                        continue_view = ContinueOrFinishView(self.view.cog, self.view.command_name, self.view.is_global, self.view.server_id)
+                        
+                        # Informer l'utilisateur
+                        await interaction.followup.send(
+                            f"✅ Text added! Current response length: {new_length} characters.\nWould you like to add more text or finish?",
+                            view=continue_view,
+                            ephemeral=True
+                        )
+                
+                # Créer et envoyer le modal
+                modal = AdditionalTextModal()
+                modal.view = self
+                await interaction.response.send_modal(modal)
+
+        # Nouvelle vue pour continuer ou terminer
+        class ContinueOrFinishView(discord.ui.View):
+            def __init__(self, cog, command_name, is_global, server_id):
+                super().__init__(timeout=300)
+                self.cog = cog
+                self.command_name = command_name
+                self.is_global = is_global
+                self.server_id = server_id
+            
+            @discord.ui.button(label="Add More Text", style=discord.ButtonStyle.primary)
+            async def add_more(self, interaction, button):
+                # Réutiliser la même logique que pour ajouter du texte
+                await ContinueResponseView.add_text(self, interaction, button)
+            
+            @discord.ui.button(label="Finish", style=discord.ButtonStyle.success)
+            async def finish(self, interaction, button):
+                await interaction.response.edit_message(
+                    content=f"✅ Command `{self.command_name}` has been successfully updated!",
+                    embed=None,
+                    view=None
                 )
 
         # Créer une vue simple pour afficher le modal
@@ -218,7 +310,8 @@ class CommandBuilder(commands.Cog):
                 description="Click the button below to create a new command!",
                 color=discord.Color.blue()
             ),
-            view=view
+            view=view,
+            ephemeral=True  # Ajouter ephemeral=True ici
         )
 
     @commands.command(name="list_commands", aliases=["commands", "cmds"])
@@ -364,10 +457,10 @@ class CommandBuilder(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def edit_command(self, ctx):
         """Edit a custom command with a modern UI interface."""
-        # Répondre immédiatement pour éviter les erreurs d'interaction
+        # Répondre immédiatement et de manière éphémère
         if ctx.interaction:
-            await ctx.defer()
-            
+            await ctx.defer(ephemeral=True)
+        
         # Récupérer toutes les commandes disponibles pour ce serveur
         server_id = str(ctx.guild.id)
         available_commands = []
@@ -382,7 +475,7 @@ class CommandBuilder(commands.Cog):
                 available_commands.append({"name": cmd_name, "scope": "server"})
         
         if not available_commands:
-            await ctx.send("No custom commands available to edit. Use `/create_command` to create one!")
+            await ctx.send("No custom commands available to edit. Use `/create_command` to create one!", ephemeral=True)
             return
         
         # Créer le sélecteur de commandes
@@ -439,7 +532,7 @@ class CommandBuilder(commands.Cog):
         )
         
         view = SelectorView(self, ctx)
-        await ctx.send(embed=embed, view=view)
+        await ctx.send(embed=embed, view=view, ephemeral=True)
     
     @commands.command(name="sync_commands", hidden=True)
     @commands.is_owner()
@@ -570,50 +663,38 @@ class CommandEditor(discord.ui.View):
         response = self.cmd_data.get("response", "")
         
         if len(response) > 1000:
-            # Si la réponse est trop longue pour un modal, proposer une édition alternative
-            await interaction.response.send_message(
-                f"⚠️ The current response is too long ({len(response)} characters) for Discord's modal limit (1000 characters).\n\n"
-                f"Here's a preview of the current response:\n```\n{response[:300]}...\n```\n"
-                f"Please send your new response as a message in this channel. Type `cancel` to cancel.",
-                ephemeral=True
-            )
+            # Si la réponse est trop longue pour un modal, proposer une édition alternative via des modaux successifs
+            class LongResponseEditModal(discord.ui.Modal, title="Edit Long Response"):
+                new_response = discord.ui.TextInput(
+                    label="New Response (Part 1)",
+                    style=discord.TextStyle.paragraph,
+                    placeholder="Enter the first part of your response...",
+                    required=True,
+                    max_length=1000
+                )
+                
+                async def on_submit(self, interaction: discord.Interaction):
+                    await interaction.response.defer(ephemeral=True)
+                    
+                    # Remplacer complètement la réponse (première partie)
+                    view = self.view
+                    
+                    # Stocker temporairement la nouvelle réponse
+                    self.temp_response = self.new_response.value
+                    
+                    # Demander si l'utilisateur souhaite ajouter plus de texte
+                    continue_view = LongResponseContinueView(view.cog, view.cmd_name, view.scope, view.server_id, self.temp_response)
+                    
+                    await interaction.followup.send(
+                        "First part of your response has been saved. Would you like to add more text?",
+                        view=continue_view,
+                        ephemeral=True
+                    )
             
-            # Attendre la réponse de l'utilisateur dans le chat
-            def check(m):
-                return m.author == interaction.user and m.channel == interaction.channel
-            
-            try:
-                msg = await self.cog.bot.wait_for('message', timeout=300.0, check=check)
-                
-                # Si l'utilisateur veut annuler
-                if msg.content.lower() == "cancel":
-                    await interaction.followup.send("Editing cancelled.", ephemeral=True)
-                    return
-                
-                # Mettre à jour la réponse
-                new_response = msg.content
-                
-                # Mettre à jour les données
-                if self.scope == "global":
-                    self.cog.commands_data["global"][self.cmd_name]["response"] = new_response
-                else:
-                    self.cog.commands_data["servers"][self.server_id][self.cmd_name]["response"] = new_response
-                
-                self.cmd_data["response"] = new_response
-                self.cog.save_commands()
-                
-                # Confirmer la mise à jour
-                embed = self.cog.create_command_info_embed(self.cmd_name, self.cmd_data, "Command response updated!")
-                await interaction.followup.send(embed=embed)
-                
-                # Supprimer le message de l'utilisateur pour éviter l'encombrement
-                try:
-                    await msg.delete()
-                except:
-                    pass
-                
-            except asyncio.TimeoutError:
-                await interaction.followup.send("You took too long to respond. Editing cancelled.", ephemeral=True)
+            # Configurer le modal
+            modal = LongResponseEditModal()
+            modal.view = self
+            await interaction.response.send_modal(modal)
         
         else:
             # Si la réponse est dans la limite, utiliser le modal comme avant
@@ -709,6 +790,65 @@ class ConfirmView(discord.ui.View):
     async def cancel(self, interaction, button):
         await interaction.response.edit_message(
             content="Command deletion cancelled.",
+            view=None
+        )
+
+class LongResponseContinueView(discord.ui.View):
+    def __init__(self, cog, cmd_name, scope, server_id, current_response):
+        super().__init__(timeout=300)
+        self.cog = cog
+        self.cmd_name = cmd_name
+        self.scope = scope
+        self.server_id = server_id
+        self.current_response = current_response
+    
+    @discord.ui.button(label="Add More Text", style=discord.ButtonStyle.primary)
+    async def add_more(self, interaction, button):
+        # Créer un nouveau modal pour la partie suivante
+        class AdditionalResponseModal(discord.ui.Modal, title="Additional Response Text"):
+            additional_text = discord.ui.TextInput(
+                label="Additional Text",
+                style=discord.TextStyle.paragraph,
+                placeholder="Enter more text to append...",
+                required=True,
+                max_length=1000
+            )
+            
+            async def on_submit(self, interaction: discord.Interaction):
+                await interaction.response.defer(ephemeral=True)
+                
+                # Ajouter à la réponse existante
+                view = self.view
+                view.current_response += "\n" + self.additional_text.value
+                
+                # Demander si l'utilisateur souhaite ajouter plus de texte
+                continue_view = LongResponseContinueView(view.cog, view.cmd_name, view.scope, view.server_id, view.current_response)
+                
+                await interaction.followup.send(
+                    f"Text added! Current response length: {len(view.current_response)} characters. Would you like to add more text?",
+                    view=continue_view,
+                    ephemeral=True
+                )
+        
+        # Configurer le modal
+        modal = AdditionalResponseModal()
+        modal.view = self
+        await interaction.response.send_modal(modal)
+    
+    @discord.ui.button(label="Save & Finish", style=discord.ButtonStyle.success)
+    async def finish(self, interaction, button):
+        # Sauvegarder la réponse
+        if self.scope == "global":
+            self.cog.commands_data["global"][self.cmd_name]["response"] = self.current_response
+        else:
+            self.cog.commands_data["servers"][self.server_id][self.cmd_name]["response"] = self.current_response
+        
+        # Sauvegarder dans le fichier
+        self.cog.save_commands()
+        
+        # Confirmer la sauvegarde
+        await interaction.response.edit_message(
+            content=f"✅ Command `{self.cmd_name}` response has been successfully updated!",
             view=None
         )
 

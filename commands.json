@@ -45,12 +45,6 @@
                 "messages": 44,
                 "last_message": 0
             },
-            "dl": {
-                "response": "**How to Increase Download Speed**\n\nUse Free Download Manager (FDM) or Internet Download Manager (IDM), and their respective Browser Extension.\n\nFree Download Manager: <https://www.freedownloadmanager.org>\nInternet Download Manager: <https://www.internetdownloadmanager.com/>",
-                "description": "Guide to improving download speed",
-                "messages": 44,
-                "last_message": 0
-            },
             "dns": {
                 "response": "## **Changing DNS System-Wide**  \n\nIf you want **all applications** (not just your browser) to use a specific DNS, you'll need to change the DNS settings at the operating system level:  \n- **Windows:** Go to `Control Panel > Network & Internet > Change adapter settings`, then modify DNS settings in your network properties.  \n- **Mac:** Open `System Preferences > Network > Advanced > DNS` and enter your preferred DNS servers.  \n- **Linux:** Modify the `/etc/resolv.conf` file or use **Network Manager** to change your DNS.  \n\n---\n\n### **Recommended Public DNS Providers:**  \n- **Cloudflare DNS:** `1.1.1.1` and `1.0.0.1` (secure & privacy-focused)  \n- **Google DNS:** `8.8.8.8` and `8.8.4.4` (fast & reliable)  \n- **OpenDNS:** `208.67.222.222` and `208.67.220.220` (extra security features)  \n- **Quad9:** `9.9.9.9` (blocks malicious domains)",
                 "description": "Guide to changing system DNS",
@@ -120,6 +114,14 @@
             "mobile": {
                 "response": "We do not provide support for mobile phones regarding PC games. You are free to try playing, but please note that we cannot assist or guarantee functionality. Thank you for your understanding.",
                 "description": "We dont provide help for mobile"
+            },
+            "fdm": {
+                "description": "How to use FDM for better speed",
+                "response": "https://rentry.co/freedownloadmanager"
+            },
+            "jd2": {
+                "description": "How to use JD2 for better performance",
+                "response": "https://rentry.co/jd0wnloader2"
             }
         }
     },
