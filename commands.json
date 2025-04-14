@@ -40,7 +40,7 @@
         },
         "1289627804211609640": {
             "wd": {
-                "response": "Follow this : https://discord.com/channels/1289627804211609640/1309841345904381952/1360721608309870652\n\nMake sure  you have ur game archived with you",
+                "response": "Follow this : https://discord.com/channels/1289627804211609640/1309841345904381952/1361292832865779746\n\nMake sure  you have ur game archived with you",
                 "description": "How to exclude a folder in Windows Defender",
                 "messages": 44,
                 "last_message": 0
@@ -121,6 +121,12 @@
                 "response": "We do not provide support for mobile phones regarding PC games. You are free to try playing, but please note that we cannot assist or guarantee functionality. Thank you for your understanding.",
                 "description": "We dont provide help for mobile"
             }
+        }
+    },
+    "global": {
+        "tryit": {
+            "description": "Sometimes, try before ask, should help a lot :)",
+            "response": "https://tryitands.ee/"
         }
     }
 }

@@ -110,8 +110,116 @@ class CommandBuilder(commands.Cog):
         # Répondre immédiatement pour éviter les erreurs d'interaction
         if ctx.interaction:
             await ctx.defer()
+        
+        # Utiliser des modaux pour une meilleure expérience utilisateur
+        class CommandCreationModal(discord.ui.Modal, title="Create Custom Command"):
+            command_name = discord.ui.TextInput(
+                label="Command Name",
+                placeholder="Enter a name for your command (no spaces)",
+                required=True,
+                max_length=32
+            )
             
-        # Reste du code inchangé...
+            command_description = discord.ui.TextInput(
+                label="Description",
+                placeholder="Enter a description for this command",
+                required=True,
+                max_length=100
+            )
+            
+            command_response = discord.ui.TextInput(
+                label="Response",
+                style=discord.TextStyle.paragraph,
+                placeholder="What should the bot say when this command is used?",
+                required=True,
+                max_length=1000
+            )
+            
+            is_global = discord.ui.TextInput(
+                label="Global Command?",
+                placeholder="Type 'yes' for global, 'no' for server only",
+                required=True,
+                max_length=3
+            )
+            
+            async def on_submit(self, interaction: discord.Interaction):
+                await interaction.response.defer()
+                
+                command_name = self.command_name.value.strip().lower()
+                description = self.command_description.value.strip()
+                response = self.command_response.value.strip()
+                is_global = self.is_global.value.lower() in ['yes', 'y', 'true']
+                
+                # Valider le nom de la commande
+                if not command_name.isalnum():
+                    await interaction.followup.send("Command name must be alphanumeric without spaces.", ephemeral=True)
+                    return
+                
+                # Vérifier si la commande existe déjà
+                server_id = str(interaction.guild.id)
+                cog = self.view.cog
+                
+                if is_global and command_name in cog.commands_data.get("global", {}):
+                    await interaction.followup.send(f"A global command named `{command_name}` already exists.", ephemeral=True)
+                    return
+                
+                if not is_global and server_id in cog.commands_data.get("servers", {}) and command_name in cog.commands_data["servers"][server_id]:
+                    await interaction.followup.send(f"A server command named `{command_name}` already exists on this server.", ephemeral=True)
+                    return
+                
+                # Ajouter la commande
+                command_data = {
+                    "description": description,
+                    "response": response
+                }
+                
+                if is_global:
+                    if "global" not in cog.commands_data:
+                        cog.commands_data["global"] = {}
+                    cog.commands_data["global"][command_name] = command_data
+                else:
+                    if "servers" not in cog.commands_data:
+                        cog.commands_data["servers"] = {}
+                    if server_id not in cog.commands_data["servers"]:
+                        cog.commands_data["servers"][server_id] = {}
+                    cog.commands_data["servers"][server_id][command_name] = command_data
+                
+                # Sauvegarder et enregistrer la commande
+                cog.save_commands()
+                cog.register_command(command_name, command_data, is_global, server_id if not is_global else None)
+                
+                # Confirmer la création
+                scope_text = "global" if is_global else f"server-specific to {interaction.guild.name}"
+                await interaction.followup.send(
+                    embed=discord.Embed(
+                        title="✅ Command Created",
+                        description=f"The command `{command_name}` has been created and is {scope_text}!",
+                        color=discord.Color.green()
+                    )
+                )
+
+        # Créer une vue simple pour afficher le modal
+        class CommandCreationButton(discord.ui.View):
+            def __init__(self, cog):
+                super().__init__()
+                self.cog = cog
+                
+            @discord.ui.button(label="Create Command", style=discord.ButtonStyle.primary)
+            async def create_button(self, interaction, button):
+                modal = CommandCreationModal()
+                modal.view = self
+                await interaction.response.send_modal(modal)
+        
+        # Envoyer un message initial avec le bouton
+        view = CommandCreationButton(self)
+        await ctx.send(
+            embed=discord.Embed(
+                title="🛠️ Create a Custom Command",
+                description="Click the button below to create a new command!",
+                color=discord.Color.blue()
+            ),
+            view=view
+        )
 
     @commands.command(name="list_commands", aliases=["commands", "cmds"])
     async def list_commands(self, ctx):
@@ -347,6 +455,39 @@ class CommandBuilder(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print(f"CommandBuilder chargé et prêt.")
+
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx, error):
+        """Gestionnaire d'erreur pour les commandes."""
+        if isinstance(error, commands.errors.CommandInvokeError):
+            original = error.original
+            print(f"Command error: {original}")
+            await ctx.send(f"❌ An error occurred: {original}")
+        elif isinstance(error, commands.errors.CommandNotFound):
+            pass  # Ignorer les commandes non trouvées
+        else:
+            print(f"Generic command error: {error}")
+            await ctx.send(f"❌ An error occurred: {error}")
+
+    @commands.Cog.listener()
+    async def on_app_command_error(self, interaction, error):
+        """Gestionnaire d'erreur pour les commandes slash."""
+        if hasattr(error, "original"):
+            error = error.original
+        
+        print(f"App command error: {error}")
+        
+        try:
+            if not interaction.response.is_done():
+                await interaction.response.send_message(f"❌ An error occurred: {error}", ephemeral=True)
+            else:
+                await interaction.followup.send(f"❌ An error occurred: {error}", ephemeral=True)
+        except discord.errors.HTTPException:
+            # Si l'interaction a expiré, essayer d'envoyer un message dans le canal
+            try:
+                await interaction.channel.send(f"❌ An error occurred with a slash command: {error}")
+            except:
+                pass
 
 class ResponseModal(discord.ui.Modal, title="Edit Command Response"):
     response = discord.ui.TextInput(
