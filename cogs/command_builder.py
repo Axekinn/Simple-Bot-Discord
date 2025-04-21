@@ -5,6 +5,7 @@ from discord import app_commands
 import json
 import os
 import asyncio
+from typing import Literal
 
 class CommandBuilder(commands.Cog):
     def __init__(self, bot):
@@ -311,546 +312,467 @@ class CommandBuilder(commands.Cog):
                 color=discord.Color.blue()
             ),
             view=view,
-            ephemeral=True  # Ajouter ephemeral=True ici
+            ephemeral=True
         )
 
-    @commands.command(name="list_commands", aliases=["commands", "cmds"])
-    async def list_commands(self, ctx):
-        """Liste toutes les commandes disponibles avec leurs descriptions."""
-        
-        def create_embed(title, commands_dict, page_num=1, max_per_page=10):
-            embed = discord.Embed(
-                title=f"📜 {title}",
-                color=discord.Color.blue()
-            )
-
-            # Convertir le dictionnaire en liste pour la pagination
-            commands_list = list(commands_dict.items())
-            start_idx = (page_num - 1) * max_per_page
-            end_idx = min(start_idx + max_per_page, len(commands_list))
-            
-            commands_text = ""
-            for cmd_name, cmd_data in commands_list[start_idx:end_idx]:
-                if isinstance(cmd_data, dict):
-                    description = cmd_data.get('description', 'Pas de description')
-                else:
-                    description = str(cmd_data)[:50] + "..." if len(str(cmd_data)) > 50 else str(cmd_data)
-                commands_text += f"**!{cmd_name}**\n→ {description}\n\n"
-
-            if commands_text:
-                embed.add_field(name="\u200b", value=commands_text, inline=False)
-            else:
-                embed.add_field(name="\u200b", value="Aucune commande disponible", inline=False)
-
-            total_pages = (len(commands_list) + max_per_page - 1) // max_per_page
-            embed.set_footer(text=f"Page {page_num}/{total_pages} • Use !create_command to create a command")
-            return embed, total_pages
-
-        # Initialiser les variables pour le suivi des messages
-        paginated_messages = {}
-        current_pages = {}
-
-        # Commandes globales
-        global_commands = self.commands_data.get("global", {})
-        if global_commands:
-            current_pages["global"] = 1
-            embed, total_pages = create_embed("Global Commands", global_commands, current_pages["global"])
-            global_message = await ctx.send(embed=embed)
-            paginated_messages["global"] = {"message": global_message, "commands": global_commands, "total_pages": total_pages}
-            
-            if total_pages > 1:
-                await global_message.add_reaction("◀️")
-                await global_message.add_reaction("▶️")
-
-        # Commandes du serveur
-        server_id = str(ctx.guild.id)
-        if server_id in self.commands_data.get("servers", {}) and self.commands_data["servers"][server_id]:
-            server_commands = self.commands_data["servers"][server_id]
-            current_pages["server"] = 1
-            embed, total_pages = create_embed(f"Commands of {ctx.guild.name}", server_commands, current_pages["server"])
-            server_message = await ctx.send(embed=embed)
-            paginated_messages["server"] = {"message": server_message, "commands": server_commands, "total_pages": total_pages}
-            
-            if total_pages > 1:
-                await server_message.add_reaction("◀️")
-                await server_message.add_reaction("▶️")
-
-        # Si aucune commande n'est disponible, informer l'utilisateur
-        if not paginated_messages:
-            await ctx.send("No custom commands available. Use `!create_command` to create one!")
-            return
-
-        def check(reaction, user):
-            # Vérifie que la réaction est sur un message que nous surveillons
-            return (user == ctx.author and 
-                    str(reaction.emoji) in ["◀️", "▶️"] and
-                    any(reaction.message.id == data["message"].id for data in paginated_messages.values()))
-
-        # Gestion des réactions pour la pagination
-        while True:
-            try:
-                reaction, user = await self.bot.wait_for("reaction_add", timeout=60.0, check=check)
-
-                # Déterminer quel message a été réagi
-                message_type = None
-                for msg_type, data in paginated_messages.items():
-                    if reaction.message.id == data["message"].id:
-                        message_type = msg_type
-                        break
-
-                if not message_type:
-                    continue
-
-                # Mettre à jour la page
-                if str(reaction.emoji) == "▶️" and current_pages[message_type] < paginated_messages[message_type]["total_pages"]:
-                    current_pages[message_type] += 1
-                elif str(reaction.emoji) == "◀️" and current_pages[message_type] > 1:
-                    current_pages[message_type] -= 1
-                else:
-                    await reaction.remove(user)
-                    continue
-
-                # Met à jour l'embed avec la nouvelle page
-                title = "Global Commands" if message_type == "global" else f"Commands of {ctx.guild.name}"
-                embed, _ = create_embed(title, paginated_messages[message_type]["commands"], current_pages[message_type])
-                await paginated_messages[message_type]["message"].edit(embed=embed)
-
-                await reaction.remove(user)
-
-            except asyncio.TimeoutError:
-                # Fin de la pagination après un délai d'inactivité
-                break
-            except Exception as e:
-                print(f"Error in pagination: {e}")
-                break
-
-    def create_command_info_embed(self, cmd_name, cmd_data, message):
-        """Creates an embed with command information."""
-        embed = discord.Embed(
-            title=f"Command: {cmd_name}",
-            description=message,
-            color=discord.Color.green()
-        )
-        
-        # Afficher la description (avec limite)
-        description = cmd_data.get("description", "No description set")
-        if len(description) > 1000:
-            description = description[:997] + "..."
-        
-        # Afficher la réponse (avec limite)
-        response = cmd_data.get("response", "No response set")
-        if len(response) > 900:
-            response_preview = response[:897] + "..."
-            response_value = f"{response_preview}\n*(Response truncated, full length: {len(response)} characters)*"
-        else:
-            response_value = response
-        
-        embed.add_field(name="Description", value=description, inline=False)
-        embed.add_field(name="Response", value=response_value, inline=False)
-        return embed
-
-    @commands.hybrid_command(
-        name="edit_command",
-        description="Edit an existing custom command with an interactive interface."
+    @app_commands.command(
+        name="commands",
+        description="Browse all available custom commands with an interactive interface."
     )
-    @app_commands.default_permissions(administrator=True)
-    @commands.has_permissions(administrator=True)
-    async def edit_command(self, ctx):
-        """Edit a custom command with a modern UI interface."""
-        # Répondre immédiatement et de manière éphémère
-        if ctx.interaction:
-            await ctx.defer(ephemeral=True)
+    @app_commands.describe(
+        scope="Show global commands, server commands, or both",
+        filter="Filter commands by name or description",
+        sort="How to sort the commands list"
+    )
+    async def slash_list_commands(
+        self, 
+        interaction: discord.Interaction, 
+        scope: Literal["global", "server", "all"] = "all",
+        filter: str = None,
+        sort: Literal["name", "recent", "usage"] = "name"
+    ):
+        """Browse all available custom commands with a modern interactive interface."""
+        await interaction.response.defer(ephemeral=True)
         
-        # Récupérer toutes les commandes disponibles pour ce serveur
-        server_id = str(ctx.guild.id)
-        available_commands = []
+        # Rechargement forcé des commandes depuis le fichier JSON
+        self.commands_data = self.load_commands()
+        print(f"[COMMANDS] Reloaded commands.json, found {len(self.commands_data.get('global', {}))} global commands")
         
-        # Commandes globales
-        for cmd_name in self.commands_data.get("global", {}):
-            available_commands.append({"name": cmd_name, "scope": "global"})
+        server_id = str(interaction.guild.id)
+        server_cmds_count = len(self.commands_data.get("servers", {}).get(server_id, {}))
+        print(f"[COMMANDS] Found {server_cmds_count} commands for server {server_id}")
         
-        # Commandes du serveur
-        if server_id in self.commands_data.get("servers", {}):
-            for cmd_name in self.commands_data["servers"][server_id]:
-                available_commands.append({"name": cmd_name, "scope": "server"})
+        # Récupérer les commandes selon le scope choisi
+        commands_to_show = {}
         
-        if not available_commands:
-            await ctx.send("No custom commands available to edit. Use `/create_command` to create one!", ephemeral=True)
+        if scope in ["global", "all"]:
+            global_commands = self.commands_data.get("global", {})
+            if global_commands:
+                commands_to_show["🌐 Global Commands"] = global_commands
+                print(f"[COMMANDS] Added {len(global_commands)} global commands to display")
+        
+        if scope in ["server", "all"]:
+            server_commands = self.commands_data.get("servers", {}).get(server_id, {})
+            if server_commands:
+                commands_to_show[f"🔒 {interaction.guild.name} Commands"] = server_commands
+                print(f"[COMMANDS] Added {len(server_commands)} server commands to display")
+        
+        if not commands_to_show:
+            await interaction.followup.send("No custom commands available. Use `/create_command` to create one!", ephemeral=True)
             return
         
-        # Créer le sélecteur de commandes
-        select_options = []
-        for cmd in available_commands:
-            scope_emoji = "🌐" if cmd["scope"] == "global" else "🔒"
-            select_options.append(
-                discord.SelectOption(
-                    label=cmd["name"], 
-                    description=f"{scope_emoji} {cmd['scope'].capitalize()} command",
-                    value=f"{cmd['scope']}|{cmd['name']}"
-                )
-            )
-        
-        class CommandSelector(discord.ui.Select):
-            def __init__(self, cog, ctx):
-                self.cog = cog
-                self.ctx = ctx
-                super().__init__(
-                    placeholder="Select a command to edit...",
-                    options=select_options,
-                    min_values=1,
-                    max_values=1
-                )
+        # Filtrer les commandes si un filtre est spécifié
+        if filter:
+            filter = filter.lower()
+            filtered_commands = {}
             
-            async def callback(self, interaction):
-                # Extraire le scope et le nom de la commande
-                scope, cmd_name = self.values[0].split("|")
+            for category, cmds in commands_to_show.items():
+                matching_cmds = {}
+                for cmd_name, cmd_data in cmds.items():
+                    # Recherche améliorée dans le nom, la description et la réponse
+                    cmd_response = cmd_data.get('response', '') if isinstance(cmd_data, dict) else str(cmd_data)
+                    if (filter in cmd_name.lower() or 
+                        (isinstance(cmd_data, dict) and filter in cmd_data.get('description', '').lower()) or
+                        filter in cmd_response.lower()):
+                        matching_cmds[cmd_name] = cmd_data
                 
-                # Récupérer les données de la commande
-                if scope == "global":
-                    cmd_data = self.cog.commands_data["global"][cmd_name]
-                else:
-                    cmd_data = self.cog.commands_data["servers"][server_id][cmd_name]
-                
-                # Créer une vue pour l'édition
-                edit_view = CommandEditor(self.cog, self.ctx, scope, cmd_name, cmd_data, server_id)
-                
-                # Afficher l'embed d'édition
-                embed = self.cog.create_command_info_embed(cmd_name, cmd_data, "Select what you want to edit:")
-                await interaction.response.edit_message(embed=embed, view=edit_view)
-        
-        class SelectorView(discord.ui.View):
-            def __init__(self, cog, ctx):
-                super().__init__(timeout=180)
-                self.cog = cog
-                self.add_item(CommandSelector(cog, ctx))
-        
-        # Afficher l'embed initial avec le sélecteur de commandes
+                if matching_cmds:
+                    filtered_commands[category] = matching_cmds
+            
+            if not filtered_commands:
+                await interaction.followup.send(f"No commands found matching '{filter}'.", ephemeral=True)
+                return
+            
+            commands_to_show = filtered_commands
+            
+        # Créer le navigateur de commandes amélioré
+        command_browser = EnhancedCommandBrowser(self, interaction, commands_to_show, sort_method=sort)
+        await command_browser.start()
+
+    @commands.command(name="list_commands", aliases=["commands", "cmds"], hidden=True)
+    async def old_list_commands(self, ctx):
+        """Redirect to the new slash command version."""
         embed = discord.Embed(
-            title="🔧 Edit Custom Command",
-            description="Select a command to edit from the dropdown menu below:",
+            title="Command Updated",
+            description="This command has been updated to a slash command!\n\nPlease use `/commands` instead for an enhanced experience.",
             color=discord.Color.blue()
         )
-        
-        view = SelectorView(self, ctx)
-        await ctx.send(embed=embed, view=view, ephemeral=True)
-    
-    @commands.command(name="sync_commands", hidden=True)
-    @commands.is_owner()
-    async def sync_commands(self, ctx):
-        """Synchronize slash commands with Discord."""
-        await ctx.send("Synchronizing slash commands...")
+        embed.set_footer(text="Slash commands provide a better interface and more features")
+        await ctx.send(embed=embed, ephemeral=True if ctx.interaction else False)
+
+    @commands.command(name="reload_commands", hidden=True)
+    @commands.has_permissions(administrator=True)
+    async def reload_commands(self, ctx):
+        """Reload commands from the commands.json file."""
         try:
-            synced = await self.bot.tree.sync()
-            await ctx.send(f"✅ Successfully synced {len(synced)} slash commands!")
-        except Exception as e:
-            await ctx.send(f"❌ Error syncing commands: {e}")
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        print(f"CommandBuilder chargé et prêt.")
-
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
-        """Gestionnaire d'erreur pour les commandes."""
-        if isinstance(error, commands.errors.CommandInvokeError):
-            original = error.original
-            print(f"Command error: {original}")
-            await ctx.send(f"❌ An error occurred: {original}")
-        elif isinstance(error, commands.errors.CommandNotFound):
-            pass  # Ignorer les commandes non trouvées
-        else:
-            print(f"Generic command error: {error}")
-            await ctx.send(f"❌ An error occurred: {error}")
-
-    @commands.Cog.listener()
-    async def on_app_command_error(self, interaction, error):
-        """Gestionnaire d'erreur pour les commandes slash."""
-        if hasattr(error, "original"):
-            error = error.original
-        
-        print(f"App command error: {error}")
-        
-        try:
-            if not interaction.response.is_done():
-                await interaction.response.send_message(f"❌ An error occurred: {error}", ephemeral=True)
-            else:
-                await interaction.followup.send(f"❌ An error occurred: {error}", ephemeral=True)
-        except discord.errors.HTTPException:
-            # Si l'interaction a expiré, essayer d'envoyer un message dans le canal
-            try:
-                await interaction.channel.send(f"❌ An error occurred with a slash command: {error}")
-            except:
-                pass
-
-class ResponseModal(discord.ui.Modal, title="Edit Command Response"):
-    response = discord.ui.TextInput(
-        label="Response",
-        style=discord.TextStyle.paragraph,
-        placeholder="Enter the new response for this command...",
-        required=True,
-        max_length=1000  # Limite Discord
-    )
-    
-    async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.defer()
-        
-        # Get the new response
-        new_response = self.response.value.strip()
-        
-        # Update the command data
-        view = self.view
-        if view.scope == "global":
-            view.cog.commands_data["global"][view.cmd_name]["response"] = new_response
-        else:
-            view.cog.commands_data["servers"][view.server_id][view.cmd_name]["response"] = new_response
-        
-        view.cmd_data["response"] = new_response
-        view.cog.save_commands()
-        
-        # Update the embed
-        embed = view.cog.create_command_info_embed(view.cmd_name, view.cmd_data, "Command response updated!")
-        
-        # Send a follow-up message with the updated info
-        await interaction.followup.send(embed=embed, view=view)
-
-class DescriptionModal(discord.ui.Modal, title="Edit Command Description"):
-    description = discord.ui.TextInput(
-        label="Description",
-        style=discord.TextStyle.paragraph,
-        placeholder="Enter the new description for this command...",
-        required=True,
-        max_length=1000
-    )
-    
-    async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.defer()
-        
-        # Get the new description
-        new_description = self.description.value.strip()
-        
-        # Update the command data
-        view = self.view
-        if view.scope == "global":
-            view.cog.commands_data["global"][view.cmd_name]["description"] = new_description
-        else:
-            view.cog.commands_data["servers"][view.server_id][view.cmd_name]["description"] = new_description
-        
-        view.cmd_data["description"] = new_description
-        view.cog.save_commands()
-        
-        # Update the embed
-        embed = view.cog.create_command_info_embed(view.cmd_name, view.cmd_data, "Command description updated!")
-        
-        # Send a follow-up message with the updated info
-        await interaction.followup.send(embed=embed, view=view)
-        
-    async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
-        await interaction.response.send_message(f"An error occurred: {error}", ephemeral=True)
-
-class CommandEditor(discord.ui.View):
-    def __init__(self, cog, ctx, scope, cmd_name, cmd_data, server_id):
-        super().__init__(timeout=300)
-        self.cog = cog
-        self.ctx = ctx
-        self.scope = scope
-        self.cmd_name = cmd_name
-        self.cmd_data = cmd_data.copy()
-        self.server_id = server_id
-    
-    @discord.ui.button(label="Edit Response", style=discord.ButtonStyle.primary)
-    async def edit_response(self, interaction, button):
-        # Vérifier la longueur de la réponse actuelle
-        response = self.cmd_data.get("response", "")
-        
-        if len(response) > 1000:
-            # Si la réponse est trop longue pour un modal, proposer une édition alternative via des modaux successifs
-            class LongResponseEditModal(discord.ui.Modal, title="Edit Long Response"):
-                new_response = discord.ui.TextInput(
-                    label="New Response (Part 1)",
-                    style=discord.TextStyle.paragraph,
-                    placeholder="Enter the first part of your response...",
-                    required=True,
-                    max_length=1000
-                )
-                
-                async def on_submit(self, interaction: discord.Interaction):
-                    await interaction.response.defer(ephemeral=True)
-                    
-                    # Remplacer complètement la réponse (première partie)
-                    view = self.view
-                    
-                    # Stocker temporairement la nouvelle réponse
-                    self.temp_response = self.new_response.value
-                    
-                    # Demander si l'utilisateur souhaite ajouter plus de texte
-                    continue_view = LongResponseContinueView(view.cog, view.cmd_name, view.scope, view.server_id, self.temp_response)
-                    
-                    await interaction.followup.send(
-                        "First part of your response has been saved. Would you like to add more text?",
-                        view=continue_view,
-                        ephemeral=True
-                    )
+            old_count = sum(len(cmds) for cmds in self.commands_data.values() if isinstance(cmds, dict))
+            self.commands_data = self.load_commands()
+            self.fix_commands_format()
+            self.register_all_commands()
+            new_count = sum(len(cmds) for cmds in self.commands_data.values() if isinstance(cmds, dict))
             
-            # Configurer le modal
-            modal = LongResponseEditModal()
-            modal.view = self
-            await interaction.response.send_modal(modal)
-        
-        else:
-            # Si la réponse est dans la limite, utiliser le modal comme avant
-            modal = ResponseModal()
-            modal.response.default = response
-            modal.view = self
-            await interaction.response.send_modal(modal)
+            await ctx.send(f"✅ Commands reloaded successfully! ({old_count} → {new_count} commands)", ephemeral=True)
+        except Exception as e:
+            await ctx.send(f"❌ Error reloading commands: {e}", ephemeral=True)
+
+# Modal pour la recherche de commandes
+class EnhancedSearchModal(discord.ui.Modal, title="Search Commands"):
+    search_query = discord.ui.TextInput(
+        label="Search",
+        placeholder="Enter command name, description or response content",
+        required=True,
+        max_length=100
+    )
     
-    @discord.ui.button(label="Edit Description", style=discord.ButtonStyle.primary)
-    async def edit_description(self, interaction, button):
-        modal = DescriptionModal()
-        modal.description.default = self.cmd_data.get("description", "")
-        modal.view = self
+    def __init__(self, browser):
+        super().__init__()
+        self.browser = browser
+    
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
         
-        # Send the modal
+        query = self.search_query.value.lower()
+        
+        # Filter commands in all categories
+        filtered_commands = {}
+        
+        for category, cmds in self.browser.commands_data.items():
+            matching_cmds = {}
+            for cmd_name, cmd_data in cmds.items():
+                # Search in name, description and response
+                cmd_response = cmd_data.get('response', '') if isinstance(cmd_data, dict) else str(cmd_data)
+                if (query in cmd_name.lower() or 
+                    (isinstance(cmd_data, dict) and query in cmd_data.get('description', '').lower()) or
+                    query in cmd_response.lower()):
+                    matching_cmds[cmd_name] = cmd_data
+            
+            if matching_cmds:
+                filtered_commands[category] = matching_cmds
+        
+        if not filtered_commands:
+            await interaction.followup.send(f"No commands found matching '{query}'.", ephemeral=True)
+            return
+        
+        # Update browser with filtered results
+        self.browser.commands_data = filtered_commands
+        self.browser.categories = list(filtered_commands.keys())
+        self.browser.current_category = 0
+        self.browser.current_page = 0
+        
+        # Update the view and embed
+        embed = self.browser.create_commands_embed()
+        self.browser.view = self.browser.create_navigation_view()
+        
+        # Include search indication in embed
+        embed.set_footer(text=f"Search results for: {query} | Use Refresh to clear")
+        
+        await interaction.edit_original_response(embed=embed, view=self.browser.view)
+
+# Classe améliorée pour la gestion des commandes
+class EnhancedCommandBrowser:
+    def __init__(self, cog, interaction, commands_categories, sort_method="name"):
+        self.cog = cog
+        self.interaction = interaction
+        self.categories = list(commands_categories.keys())
+        self.commands_data = commands_categories
+        self.current_category = 0
+        self.current_page = 0
+        self.commands_per_page = 5  # Réduit pour plus de lisibilité et d'espace pour les détails
+        self.selected_command = None
+        self.view = None
+        self.sort_method = sort_method
+        self.message = None
+        self.detailed_view = False
+    
+    async def start(self):
+        """Démarre l'affichage du navigateur de commandes"""
+        self.view = self.create_navigation_view()
+        embed = self.create_commands_embed()
+        self.message = await self.interaction.followup.send(embed=embed, view=self.view, ephemeral=True)
+    
+    def create_navigation_view(self):
+        """Crée la vue avec les boutons de navigation améliorée"""
+        view = discord.ui.View(timeout=600)  # Plus long timeout
+        
+        # Première ligne: Navigation de page
+        prev_button = discord.ui.Button(
+            style=discord.ButtonStyle.secondary,
+            emoji="◀️",
+            disabled=self.current_page == 0,
+            row=0
+        )
+        prev_button.callback = self.previous_page
+        view.add_item(prev_button)
+        
+        page_indicator = discord.ui.Button(
+            style=discord.ButtonStyle.secondary,
+            label=f"Page {self.current_page + 1}/{max(1, self.get_max_pages())}",
+            disabled=True,
+            row=0
+        )
+        view.add_item(page_indicator)
+        
+        next_button = discord.ui.Button(
+            style=discord.ButtonStyle.secondary,
+            emoji="▶️",
+            disabled=self.current_page >= self.get_max_pages() - 1,
+            row=0
+        )
+        next_button.callback = self.next_page
+        view.add_item(next_button)
+        
+        # Deuxième ligne: Actions principales
+        # Vue détaillée / Vue liste
+        view_toggle = discord.ui.Button(
+            style=discord.ButtonStyle.primary,
+            emoji="🔍" if not self.detailed_view else "📋",
+            label="Detailed View" if not self.detailed_view else "List View",
+            row=1
+        )
+        view_toggle.callback = self.toggle_view_mode
+        view.add_item(view_toggle)
+        
+        # Ajouter une nouvelle commande
+        add_button = discord.ui.Button(
+            style=discord.ButtonStyle.success,
+            emoji="➕",
+            label="Create Command",
+            row=1
+        )
+        add_button.callback = self.create_command
+        view.add_item(add_button)
+        
+        # Recherche
+        search_button = discord.ui.Button(
+            style=discord.ButtonStyle.primary,
+            emoji="🔎",
+            label="Search",
+            row=1
+        )
+        search_button.callback = self.search_commands
+        view.add_item(search_button)
+        
+        # Troisième ligne: Menu déroulant pour le tri
+        sort_select = discord.ui.Select(
+            placeholder="Sort by...",
+            options=[
+                discord.SelectOption(label="Sort by Name", value="name", emoji="🔤", default=self.sort_method=="name"),
+                discord.SelectOption(label="Sort by Recent", value="recent", emoji="🕒", default=self.sort_method=="recent"),
+                discord.SelectOption(label="Sort by Usage", value="usage", emoji="📊", default=self.sort_method=="usage")
+            ],
+            row=2
+        )
+        sort_select.callback = self.change_sort
+        view.add_item(sort_select)
+        
+        # Quatrième ligne: Menu déroulant pour changer de catégorie
+        if len(self.categories) > 1:
+            category_select = discord.ui.Select(
+                placeholder="Select category",
+                options=[
+                    discord.SelectOption(
+                        label=cat.replace("🌐 ", "").replace("🔒 ", "")[:25],
+                        value=str(i),
+                        emoji="🌐" if "Global" in cat else "🔒",
+                        description=f"{len(self.commands_data[cat])} commands",
+                        default=i == self.current_category
+                    )
+                    for i, cat in enumerate(self.categories)
+                ],
+                row=3  # Moved to row 3 to prevent overflow
+            )
+            category_select.callback = self.change_category
+            view.add_item(category_select)
+        
+        # Cinquième ligne: Actions utilitaires
+        # Exporter la liste
+        export_button = discord.ui.Button(
+            style=discord.ButtonStyle.secondary,
+            emoji="📤",
+            label="Export",
+            row=4
+        )
+        export_button.callback = self.export_commands
+        view.add_item(export_button)
+        
+        # Rafraîchir
+        refresh_button = discord.ui.Button(
+            style=discord.ButtonStyle.secondary,
+            emoji="🔄",
+            label="Refresh",
+            row=4
+        )
+        refresh_button.callback = self.refresh_list
+        view.add_item(refresh_button)
+        
+        return view
+    
+    async def previous_page(self, interaction):
+        """Naviguer vers la page précédente"""
+        await interaction.response.defer()
+        if self.current_page > 0:
+            self.current_page -= 1
+            embed = self.create_commands_embed()
+            self.view = self.create_navigation_view()
+            await interaction.edit_original_response(embed=embed, view=self.view)
+    
+    async def next_page(self, interaction):
+        """Naviguer vers la page suivante"""
+        await interaction.response.defer()
+        if self.current_page < self.get_max_pages() - 1:
+            self.current_page += 1
+            embed = self.create_commands_embed()
+            self.view = self.create_navigation_view()
+            await interaction.edit_original_response(embed=embed, view=self.view)
+    
+    async def toggle_view_mode(self, interaction):
+        """Basculer entre vue détaillée et vue liste"""
+        await interaction.response.defer()
+        self.detailed_view = not self.detailed_view
+        self.current_page = 0  # Revenir à la première page lors du changement de vue
+        embed = self.create_commands_embed()
+        self.view = self.create_navigation_view()
+        await interaction.edit_original_response(embed=embed, view=self.view)
+    
+    async def change_category(self, interaction):
+        """Changer de catégorie de commandes"""
+        await interaction.response.defer()
+        self.current_category = int(interaction.data["values"][0])
+        self.current_page = 0
+        embed = self.create_commands_embed()
+        self.view = self.create_navigation_view()
+        await interaction.edit_original_response(embed=embed, view=self.view)
+    
+    async def change_sort(self, interaction):
+        """Changer la méthode de tri"""
+        await interaction.response.defer()
+        self.sort_method = interaction.data["values"][0]
+        self.current_page = 0
+        embed = self.create_commands_embed()
+        self.view = self.create_navigation_view()
+        await interaction.edit_original_response(embed=embed, view=self.view)
+    
+    async def search_commands(self, interaction):
+        """Ouvrir un modal de recherche amélioré"""
+        modal = EnhancedSearchModal(self)
         await interaction.response.send_modal(modal)
     
-    @discord.ui.button(label="Delete Command", style=discord.ButtonStyle.danger)
-    async def delete_command(self, interaction, button):
-        # Create confirmation view
-        confirm_view = ConfirmView(self)
-        
-        # Send confirmation message
-        await interaction.response.send_message(
-            f"⚠️ Are you sure you want to delete the command `{self.cmd_name}`?", 
-            view=confirm_view, 
+    async def create_command(self, interaction):
+        """Rediriger vers la création de commande"""
+        await interaction.response.defer(ephemeral=True)
+        await interaction.followup.send(
+            "Use the `/create_command` command to create a new custom command!", 
             ephemeral=True
         )
     
-    @discord.ui.button(label="View Full Response", style=discord.ButtonStyle.secondary)
-    async def view_full_response(self, interaction, button):
-        response = self.cmd_data.get("response", "")
+    async def export_commands(self, interaction):
+        """Exporter les commandes dans un fichier amélioré"""
+        await interaction.response.defer()
+        category = self.categories[self.current_category]
+        commands = self.commands_data[category]
         
-        if len(response) > 1900:
-            # Si la réponse est trop longue pour un message Discord
-            chunks = [response[i:i+1900] for i in range(0, len(response), 1900)]
-            await interaction.response.send_message(f"Full response for `{self.cmd_name}` (part 1/{len(chunks)}):", ephemeral=True)
+        # Créer un contenu formaté pour l'export
+        content = f"# {category}\n\n"
+        content += f"> Exported on {discord.utils.utcnow().strftime('%Y-%m-%d at %H:%M UTC')}\n"
+        content += f"> Server: {self.interaction.guild.name}\n\n"
+        
+        for cmd_name, cmd_data in sorted(commands.items()):
+            description = cmd_data.get('description', 'No description') if isinstance(cmd_data, dict) else 'No description'
+            content += f"## !{cmd_name}\n"
+            content += f"Description: {description}\n\n"
             
-            for i, chunk in enumerate(chunks):
-                if i == 0:  # Premier morceau déjà envoyé
-                    continue
-                await interaction.followup.send(f"Part {i+1}/{len(chunks)}:\n{chunk}", ephemeral=True)
-        else:
-            await interaction.response.send_message(f"Full response for `{self.cmd_name}`:\n{response}", ephemeral=True)
-    
-    @discord.ui.button(label="Done", style=discord.ButtonStyle.success)
-    async def done(self, interaction, button):
-        await interaction.response.edit_message(
-            embed=discord.Embed(
-                title="✅ Command Edited",
-                description=f"The command `{self.cmd_name}` has been successfully updated!",
-                color=discord.Color.green()
-            ),
-            view=None
-        )
+            if isinstance(cmd_data, dict) and 'response' in cmd_data:
+                content += f"Response:\n```\n{cmd_data['response']}\n```\n\n"
 
-class ConfirmView(discord.ui.View):
-    def __init__(self, editor_view):
-        super().__init__(timeout=60)
-        self.editor_view = editor_view
-    
-    @discord.ui.button(label="Yes, Delete", style=discord.ButtonStyle.danger)
-    async def confirm(self, interaction, button):
-        # Delete the command
-        if self.editor_view.scope == "global":
-            del self.editor_view.cog.commands_data["global"][self.editor_view.cmd_name]
-        else:
-            del self.editor_view.cog.commands_data["servers"][self.editor_view.server_id][self.editor_view.cmd_name]
+        # Créer un fichier temporaire
+        timestamp = discord.utils.utcnow().strftime('%Y%m%d_%H%M%S')
+        filename = f"commands_{category.replace(' ', '_').replace(':', '')}_{timestamp}.md"
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(content)
         
-        # Save changes
-        self.editor_view.cog.save_commands()
-        
-        # Remove the command from the bot
-        if self.editor_view.cog.bot.get_command(self.editor_view.cmd_name):
-            self.editor_view.cog.bot.remove_command(self.editor_view.cmd_name)
-        
-        # Send confirmation
-        await interaction.response.edit_message(
-            content=f"✅ Command `{self.editor_view.cmd_name}` has been deleted.",
-            view=None
+        # Envoyer le fichier
+        file = discord.File(filename)
+        await interaction.followup.send(
+            "📤 Here's your exported commands list:",
+            file=file,
+            ephemeral=True
         )
         
-        # Update the original message
-        await self.editor_view.ctx.send(
-            embed=discord.Embed(
-                title="Command Deleted",
-                description=f"Command `{self.editor_view.cmd_name}` has been deleted.",
-                color=discord.Color.red()
-            )
+        # Supprimer le fichier temporaire
+        try:
+            os.remove(filename)
+        except:
+            pass
+    
+    async def refresh_list(self, interaction):
+        """Rafraîchir la liste des commandes"""
+        await interaction.response.defer()
+        # Recharger les données des commandes
+        self.cog.commands_data = self.cog.load_commands()
+        
+        server_id = str(self.interaction.guild.id)
+        commands_to_show = {}
+        
+        # Déterminer le scope actuel en fonction de la catégorie courante
+        current_scope = "global" if "Global" in self.categories[self.current_category] else "server"
+        
+        if current_scope == "global" or current_scope == "all":
+            global_commands = self.cog.commands_data.get("global", {})
+            if global_commands:
+                commands_to_show["🌐 Global Commands"] = global_commands
+        
+        if current_scope == "server" or current_scope == "all":
+            server_commands = self.cog.commands_data.get("servers", {}).get(server_id, {})
+            if server_commands:
+                commands_to_show[f"🔒 {self.interaction.guild.name} Commands"] = server_commands
+        
+        # Mettre à jour les données
+        self.commands_data = commands_to_show
+        self.categories = list(commands_to_show.keys())
+        self.current_category = min(self.current_category, max(0, len(self.categories) - 1))
+        self.current_page = min(self.current_page, max(0, self.get_max_pages() - 1))
+        
+        # Mettre à jour l'affichage
+        embed = self.create_commands_embed()
+        self.view = self.create_navigation_view()
+        await interaction.edit_original_response(
+            content="✅ Commands list refreshed!",
+            embed=embed, 
+            view=self.view
         )
     
-    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.secondary)
-    async def cancel(self, interaction, button):
-        await interaction.response.edit_message(
-            content="Command deletion cancelled.",
-            view=None
+    def create_commands_embed(self):
+        """Créer un embed pour afficher les commandes"""
+        category = self.categories[self.current_category]
+        commands = self.commands_data[category]
+        
+        embed = discord.Embed(
+            title=f"{category} Commands",
+            description=f"Showing commands for {category}.",
+            color=discord.Color.blue()
         )
-
-class LongResponseContinueView(discord.ui.View):
-    def __init__(self, cog, cmd_name, scope, server_id, current_response):
-        super().__init__(timeout=300)
-        self.cog = cog
-        self.cmd_name = cmd_name
-        self.scope = scope
-        self.server_id = server_id
-        self.current_response = current_response
+        
+        # Trier les commandes
+        sorted_commands = sorted(commands.items(), key=lambda x: x[0])  # Tri par nom par défaut
+        
+        # Afficher les commandes par page
+        start_index = self.current_page * self.commands_per_page
+        end_index = start_index + self.commands_per_page
+        commands_to_display = sorted_commands[start_index:end_index]
+        
+        for cmd_name, cmd_data in commands_to_display:
+            description = cmd_data.get('description', 'No description') if isinstance(cmd_data, dict) else 'No description'
+            response = cmd_data.get('response', 'No response') if isinstance(cmd_data, dict) else str(cmd_data)
+            embed.add_field(name=f"!{cmd_name}", value=f"**Description:** {description}\n**Response:** {response[:200]}...", inline=False)
+        
+        embed.set_footer(text=f"Page {self.current_page + 1}/{max(1, self.get_max_pages())}")
+        return embed
     
-    @discord.ui.button(label="Add More Text", style=discord.ButtonStyle.primary)
-    async def add_more(self, interaction, button):
-        # Créer un nouveau modal pour la partie suivante
-        class AdditionalResponseModal(discord.ui.Modal, title="Additional Response Text"):
-            additional_text = discord.ui.TextInput(
-                label="Additional Text",
-                style=discord.TextStyle.paragraph,
-                placeholder="Enter more text to append...",
-                required=True,
-                max_length=1000
-            )
-            
-            async def on_submit(self, interaction: discord.Interaction):
-                await interaction.response.defer(ephemeral=True)
-                
-                # Ajouter à la réponse existante
-                view = self.view
-                view.current_response += "\n" + self.additional_text.value
-                
-                # Demander si l'utilisateur souhaite ajouter plus de texte
-                continue_view = LongResponseContinueView(view.cog, view.cmd_name, view.scope, view.server_id, view.current_response)
-                
-                await interaction.followup.send(
-                    f"Text added! Current response length: {len(view.current_response)} characters. Would you like to add more text?",
-                    view=continue_view,
-                    ephemeral=True
-                )
-        
-        # Configurer le modal
-        modal = AdditionalResponseModal()
-        modal.view = self
-        await interaction.response.send_modal(modal)
-    
-    @discord.ui.button(label="Save & Finish", style=discord.ButtonStyle.success)
-    async def finish(self, interaction, button):
-        # Sauvegarder la réponse
-        if self.scope == "global":
-            self.cog.commands_data["global"][self.cmd_name]["response"] = self.current_response
-        else:
-            self.cog.commands_data["servers"][self.server_id][self.cmd_name]["response"] = self.current_response
-        
-        # Sauvegarder dans le fichier
-        self.cog.save_commands()
-        
-        # Confirmer la sauvegarde
-        await interaction.response.edit_message(
-            content=f"✅ Command `{self.cmd_name}` response has been successfully updated!",
-            view=None
-        )
+    def get_max_pages(self):
+        """Obtenir le nombre maximum de pages"""
+        category = self.categories[self.current_category]
+        commands = self.commands_data[category]
+        return (len(commands) + self.commands_per_page - 1) // self.commands_per_page
 
 async def setup(bot):
     await bot.add_cog(CommandBuilder(bot))
