@@ -264,17 +264,23 @@ class RoleSetupView(discord.ui.View):
                             name, emoji_id = pair.emoji_str.strip('<a:>').rsplit(':', 1)
                             emoji_id = int(emoji_id.rstrip('>'))
                             emoji = discord.utils.get(interaction.guild.emojis, id=emoji_id)
+                            if emoji:
+                                await message.add_reaction(emoji)
+                                stored_emoji = f"<a:{emoji.name}:{emoji.id}>"  # Format animé
+                            else:
+                                print(f"Emoji animé {name} ({emoji_id}) non trouvé sur le serveur")
+                                continue
                         else: # Emoji normal
                             name, emoji_id = pair.emoji_str.strip('<:>').rsplit(':', 1)
                             emoji_id = int(emoji_id.rstrip('>'))
                             emoji = discord.utils.get(interaction.guild.emojis, id=emoji_id)
+                            if emoji:
+                                await message.add_reaction(emoji)
+                                stored_emoji = f"<:{emoji.name}:{emoji.id}>"  # Format normal
+                            else:
+                                print(f"Emoji {name} ({emoji_id}) non trouvé sur le serveur")
+                                continue
                         
-                        if emoji:
-                            await message.add_reaction(emoji)
-                            stored_emoji = str(emoji)
-                        else:
-                            print(f"Emoji {name} ({emoji_id}) non trouvé sur le serveur")
-                            continue
                     except Exception as e:
                         print(f"Erreur lors de l'ajout de la réaction {pair.emoji_str}: {e}")
                         continue
@@ -282,8 +288,9 @@ class RoleSetupView(discord.ui.View):
                     # Pour les émojis Unicode
                     await message.add_reaction(pair.emoji_str)
                     stored_emoji = pair.emoji_str
-                
+        
                 self.cog.role_messages[message.id][stored_emoji] = pair.role.id
+                print(f"DEBUG: Stocké {stored_emoji} -> {pair.role.name}")
                 
             except Exception as e:
                 print(f"Erreur lors de l'ajout de la réaction {pair.emoji_str}: {e}")
@@ -312,20 +319,21 @@ class RoleReaction(commands.Cog):
         Parse un emoji personnalisé ou unicode
         Retourne (emoji_str, emoji_display)
         """
-        # Si c'est un emoji personnalisé (<:name:id>)
-        if emoji_str.startswith('<:') and emoji_str.endswith('>'):
-            try:
-                name, id = emoji_str.strip('<:>').rsplit(':', 1)
-                return emoji_str, f"<:{name}:{id}>"
-            except ValueError:
-                return emoji_str, emoji_str
         # Si c'est un emoji animé (<a:name:id>)
-        elif emoji_str.startswith('<a:') and emoji_str.endswith('>'):
+        if emoji_str.startswith('<a:') and emoji_str.endswith('>'):
             try:
                 name, id = emoji_str.strip('<a:>').rsplit(':', 1)
-                return emoji_str, f"<a:{name}:{id}>"
+                return f"<a:{name}:{id}>", f"<a:{name}:{id}>"
             except ValueError:
                 return emoji_str, emoji_str
+        # Si c'est un emoji personnalisé normal (<:name:id>)
+        elif emoji_str.startswith('<:') and emoji_str.endswith('>'):
+            try:
+                name, id = emoji_str.strip('<:>').rsplit(':', 1)
+                return f"<:{name}:{id}>", f"<:{name}:{id}>"
+            except ValueError:
+                return emoji_str, emoji_str
+        # Emoji Unicode
         return emoji_str, emoji_str
 
     @app_commands.command(
@@ -457,9 +465,17 @@ class RoleReaction(commands.Cog):
 
         # Gestion des émojis personnalisés et Unicode
         if payload.emoji.id:
-            emoji_str = f"<:{payload.emoji.name}:{payload.emoji.id}>"
+            # Pour les emojis personnalisés (animés ou non)
+            if payload.emoji.animated:
+                emoji_str = f"<a:{payload.emoji.name}:{payload.emoji.id}>"
+            else:
+                emoji_str = f"<:{payload.emoji.name}:{payload.emoji.id}>"
         else:
+            # Pour les emojis Unicode
             emoji_str = str(payload.emoji)
+
+        print(f"DEBUG: Réaction ajoutée - emoji_str: {emoji_str}")
+        print(f"DEBUG: Emojis enregistrés: {list(self.role_messages[payload.message_id].keys())}")
 
         if emoji_str in self.role_messages[payload.message_id]:
             guild = self.bot.get_guild(payload.guild_id)
@@ -467,6 +483,7 @@ class RoleReaction(commands.Cog):
             member = await guild.fetch_member(payload.user_id)
             if member and member.id != self.bot.user.id:
                 await member.add_roles(role)
+                print(f"DEBUG: Rôle {role.name} ajouté à {member.name}")
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload: discord.RawReactionActionEvent):
@@ -475,9 +492,16 @@ class RoleReaction(commands.Cog):
 
         # Gestion des émojis personnalisés et Unicode
         if payload.emoji.id:
-            emoji_str = f"<:{payload.emoji.name}:{payload.emoji.id}>"
+            # Pour les emojis personnalisés (animés ou non)
+            if payload.emoji.animated:
+                emoji_str = f"<a:{payload.emoji.name}:{payload.emoji.id}>"
+            else:
+                emoji_str = f"<:{payload.emoji.name}:{payload.emoji.id}>"
         else:
+            # Pour les emojis Unicode
             emoji_str = str(payload.emoji)
+
+        print(f"DEBUG: Réaction supprimée - emoji_str: {emoji_str}")
 
         if emoji_str in self.role_messages[payload.message_id]:
             guild = self.bot.get_guild(payload.guild_id)
@@ -485,6 +509,7 @@ class RoleReaction(commands.Cog):
             member = await guild.fetch_member(payload.user_id)
             if member and member.id != self.bot.user.id:
                 await member.remove_roles(role)
+                print(f"DEBUG: Rôle {role.name} supprimé de {member.name}")
 
 # Nouvelle classe pour afficher les émojis du serveur
 class ServerEmojiSelectionView(discord.ui.View):
